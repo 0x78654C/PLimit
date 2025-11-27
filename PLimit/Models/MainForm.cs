@@ -44,9 +44,7 @@ namespace PLimit
         /// <param name="e"></param>
         private void refreshProcessListBtn_Click(object sender, EventArgs e)
         {
-            _backGroundWorker = new BackgroundWorker();
-            _backGroundWorker.DoWork += _backGroundWorker_DoWork;
-            _backGroundWorker.RunWorkerAsync();
+            RefreshProcessList();
         }
 
         /// <summary>
@@ -56,9 +54,21 @@ namespace PLimit
         /// <param name="e"></param>
         private void searchProcessBtn_Click(object sender, EventArgs e)
         {
+            SearchProcess();
+        }
+
+        private void SearchProcess()
+        {
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
             searchProcess.SearchProcess(ref processesListBox, search);
+        }
+
+        private void RefreshProcessList()
+        {
+            _backGroundWorker = new BackgroundWorker();
+            _backGroundWorker.DoWork += _backGroundWorker_DoWork;
+            _backGroundWorker.RunWorkerAsync();
         }
 
         /// <summary>
@@ -68,5 +78,53 @@ namespace PLimit
         /// <param name="e"></param>
         private void searchProcessTxt_TextChanged(object sender, EventArgs e) =>
             searchProcessBtn.Enabled = (string.IsNullOrEmpty(searchProcessTxt.Text)) ? false : true;
+
+        /// <summary>
+        /// Load context menu on right click event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void processesListBox_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var focusedItem = processesListBox.FocusedItem;
+                if (focusedItem != null)
+                    actionMenuStrip.Show(Cursor.Position);
+            }
+        }
+
+        /// <summary>
+        /// Disable priority boost on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void enableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setBoost = new ProcessesManage();
+            setBoost.SetBoost(true, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Disable priority boost on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void processesListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+ 
+        }
+
+        private void disableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setBoost = new ProcessesManage();
+            setBoost.SetBoost(false, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
     }
 }

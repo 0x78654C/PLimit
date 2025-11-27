@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             processesListBox = new ListView();
             processName = new ColumnHeader();
             processId = new ColumnHeader();
@@ -38,6 +39,11 @@
             searchProcessBtn = new Button();
             searchProcessTxt = new TextBox();
             refreshProcessListBtn = new Button();
+            actionMenuStrip = new ContextMenuStrip(components);
+            boostToolStripMenuItem = new ToolStripMenuItem();
+            enableToolStripMenuItem = new ToolStripMenuItem();
+            disableToolStripMenuItem = new ToolStripMenuItem();
+            actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // processesListBox
@@ -52,6 +58,8 @@
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
             processesListBox.View = View.Details;
+            processesListBox.SelectedIndexChanged += processesListBox_SelectedIndexChanged;
+            processesListBox.MouseClick += processesListBox_MouseClick;
             // 
             // processName
             // 
@@ -113,6 +121,33 @@
             refreshProcessListBtn.UseVisualStyleBackColor = true;
             refreshProcessListBtn.Click += refreshProcessListBtn_Click;
             // 
+            // actionMenuStrip
+            // 
+            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem });
+            actionMenuStrip.Name = "contextMenuStrip1";
+            actionMenuStrip.Size = new Size(181, 48);
+            // 
+            // boostToolStripMenuItem
+            // 
+            boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
+            boostToolStripMenuItem.Name = "boostToolStripMenuItem";
+            boostToolStripMenuItem.Size = new Size(180, 22);
+            boostToolStripMenuItem.Text = "Boost";
+            // 
+            // enableToolStripMenuItem
+            // 
+            enableToolStripMenuItem.Name = "enableToolStripMenuItem";
+            enableToolStripMenuItem.Size = new Size(180, 22);
+            enableToolStripMenuItem.Text = "Enable";
+            enableToolStripMenuItem.Click += enableToolStripMenuItem_Click;
+            // 
+            // disableToolStripMenuItem
+            // 
+            disableToolStripMenuItem.Name = "disableToolStripMenuItem";
+            disableToolStripMenuItem.Size = new Size(180, 22);
+            disableToolStripMenuItem.Text = "Disable";
+            disableToolStripMenuItem.Click += disableToolStripMenuItem_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -128,6 +163,7 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
             Load += MainForm_Load;
+            actionMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -144,5 +180,9 @@
         private Button searchProcessBtn;
         private TextBox searchProcessTxt;
         private Button refreshProcessListBtn;
+        private ContextMenuStrip actionMenuStrip;
+        private ToolStripMenuItem boostToolStripMenuItem;
+        private ToolStripMenuItem enableToolStripMenuItem;
+        private ToolStripMenuItem disableToolStripMenuItem;
     }
 }

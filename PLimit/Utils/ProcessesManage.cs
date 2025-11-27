@@ -22,6 +22,9 @@ namespace PLimit.Utils
     IntPtr hProcess,
     out bool pDisablePriorityBoost);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetProcessPriorityBoost(IntPtr hProcess, bool DisablePriorityBoost);
+
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
 
@@ -105,6 +108,25 @@ namespace PLimit.Utils
                     var listViewItem = new ListViewItem([process.ProcessName, process.Id.ToString(), process.PriorityClass.ToString(), cpus.ToString(), io, disabled.ToString()]);
                     listView.Items.Add(listViewItem);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Set priority boost for a process.
+        /// </summary>
+        /// <param name="isEnabled"></param>
+        /// <param name="processId"></param>
+        public void SetBoost(bool isEnabled, int processId)
+        {
+            try
+            {
+                var getProcess = Process.GetProcessById(processId);
+                IntPtr handle = getProcess.Handle;
+                SetProcessPriorityBoost(handle, isEnabled);
+            }
+            catch
+            {
+                MessageBox.Show("Failed to set priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
