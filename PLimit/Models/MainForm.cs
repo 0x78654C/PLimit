@@ -1,5 +1,6 @@
 using PLimit.Utils;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace PLimit
 {
@@ -186,5 +187,19 @@ namespace PLimit
             SearchProcess();
         }
         #endregion
+
+        /// <summary>
+        /// Set process priority to High on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void highToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
     }
 }

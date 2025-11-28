@@ -137,13 +137,13 @@
             // 
             actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(133, 70);
+            actionMenuStrip.Size = new Size(181, 92);
             // 
             // boostToolStripMenuItem
             // 
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
-            boostToolStripMenuItem.Size = new Size(132, 22);
+            boostToolStripMenuItem.Size = new Size(180, 22);
             boostToolStripMenuItem.Text = "Boost";
             // 
             // enableToolStripMenuItem
@@ -164,34 +164,34 @@
             // 
             iOPriorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { veryLowToolStripMenuItem, lowToolStripMenuItem, normalToolStripMenuItem, highToolStripMenuItem });
             iOPriorityToolStripMenuItem.Name = "iOPriorityToolStripMenuItem";
-            iOPriorityToolStripMenuItem.Size = new Size(132, 22);
+            iOPriorityToolStripMenuItem.Size = new Size(180, 22);
             iOPriorityToolStripMenuItem.Text = "I/O Priority";
             // 
             // veryLowToolStripMenuItem
             // 
             veryLowToolStripMenuItem.Name = "veryLowToolStripMenuItem";
-            veryLowToolStripMenuItem.Size = new Size(180, 22);
+            veryLowToolStripMenuItem.Size = new Size(118, 22);
             veryLowToolStripMenuItem.Text = "VeryLow";
             veryLowToolStripMenuItem.Click += veryLowToolStripMenuItem_Click;
             // 
             // lowToolStripMenuItem
             // 
             lowToolStripMenuItem.Name = "lowToolStripMenuItem";
-            lowToolStripMenuItem.Size = new Size(180, 22);
+            lowToolStripMenuItem.Size = new Size(118, 22);
             lowToolStripMenuItem.Text = "Low";
             lowToolStripMenuItem.Click += lowToolStripMenuItem_Click;
             // 
             // normalToolStripMenuItem
             // 
             normalToolStripMenuItem.Name = "normalToolStripMenuItem";
-            normalToolStripMenuItem.Size = new Size(180, 22);
+            normalToolStripMenuItem.Size = new Size(118, 22);
             normalToolStripMenuItem.Text = "Normal";
             normalToolStripMenuItem.Click += normalToolStripMenuItem_Click;
             // 
             // highToolStripMenuItem
             // 
             highToolStripMenuItem.Name = "highToolStripMenuItem";
-            highToolStripMenuItem.Size = new Size(180, 22);
+            highToolStripMenuItem.Size = new Size(118, 22);
             highToolStripMenuItem.Text = "High";
             highToolStripMenuItem.Click += highToolStripMenuItem_Click;
             // 
@@ -199,7 +199,7 @@
             // 
             priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem, lowToolStripMenuItem1 });
             priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
-            priorityToolStripMenuItem.Size = new Size(132, 22);
+            priorityToolStripMenuItem.Size = new Size(180, 22);
             priorityToolStripMenuItem.Text = "Priority";
             // 
             // realTimedangerToolStripMenuItem
@@ -213,6 +213,7 @@
             highToolStripMenuItem1.Name = "highToolStripMenuItem1";
             highToolStripMenuItem1.Size = new Size(180, 22);
             highToolStripMenuItem1.Text = "High";
+            highToolStripMenuItem1.Click += highToolStripMenuItem1_Click;
             // 
             // aboveNormalToolStripMenuItem
             // 
