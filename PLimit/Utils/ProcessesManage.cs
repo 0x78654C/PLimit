@@ -162,6 +162,24 @@ namespace PLimit.Utils
         }
 
         /// <summary>
+        /// Set priority class for a process.
+        /// </summary>
+        /// <param name="priorityClass"></param>
+        /// <param name="processId"></param>
+        public void SetPriorityClass(ProcessPriorityClass priorityClass, int processId)
+        {
+            try
+            {
+                var getProcess = Process.GetProcessById(processId);
+                getProcess.PriorityClass = priorityClass;
+            }
+            catch
+            {
+                MessageBox.Show("Failed to set priority class! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// Set priority boost for a process.
         /// </summary>
         /// <param name="isEnabled"></param>
