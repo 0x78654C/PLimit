@@ -115,7 +115,7 @@ namespace PLimit
         /// <param name="e"></param>
         private void processesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
- 
+
         }
 
         private void disableToolStripMenuItem_Click(object sender, EventArgs e)
@@ -126,5 +126,65 @@ namespace PLimit
             RefreshProcessList();
             SearchProcess();
         }
+
+
+        #region IO Priority Menu Events
+        /// <summary>
+        /// Set IO priority to Very Low on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void veryLowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setIoPriority = new ProcessesManage();
+            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Set IO priority to Low on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setIoPriority = new ProcessesManage();
+            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Set IO priority to Normal on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void normalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setIoPriority = new ProcessesManage();
+            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+
+        /// <summary>
+        /// Set IO priority to High on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void highToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setIoPriority = new ProcessesManage();
+            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
+            RefreshProcessList();
+            SearchProcess();
+        }
+        #endregion
     }
 }

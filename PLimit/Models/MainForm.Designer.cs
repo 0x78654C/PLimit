@@ -43,6 +43,18 @@
             boostToolStripMenuItem = new ToolStripMenuItem();
             enableToolStripMenuItem = new ToolStripMenuItem();
             disableToolStripMenuItem = new ToolStripMenuItem();
+            iOPriorityToolStripMenuItem = new ToolStripMenuItem();
+            veryLowToolStripMenuItem = new ToolStripMenuItem();
+            lowToolStripMenuItem = new ToolStripMenuItem();
+            normalToolStripMenuItem = new ToolStripMenuItem();
+            highToolStripMenuItem = new ToolStripMenuItem();
+            priorityToolStripMenuItem = new ToolStripMenuItem();
+            realTimedangerToolStripMenuItem = new ToolStripMenuItem();
+            highToolStripMenuItem1 = new ToolStripMenuItem();
+            aboveNormalToolStripMenuItem = new ToolStripMenuItem();
+            normalToolStripMenuItem1 = new ToolStripMenuItem();
+            belowNormalToolStripMenuItem = new ToolStripMenuItem();
+            lowToolStripMenuItem1 = new ToolStripMenuItem();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -123,30 +135,108 @@
             // 
             // actionMenuStrip
             // 
-            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem });
+            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(181, 48);
+            actionMenuStrip.Size = new Size(133, 70);
             // 
             // boostToolStripMenuItem
             // 
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
-            boostToolStripMenuItem.Size = new Size(180, 22);
+            boostToolStripMenuItem.Size = new Size(132, 22);
             boostToolStripMenuItem.Text = "Boost";
             // 
             // enableToolStripMenuItem
             // 
             enableToolStripMenuItem.Name = "enableToolStripMenuItem";
-            enableToolStripMenuItem.Size = new Size(180, 22);
+            enableToolStripMenuItem.Size = new Size(112, 22);
             enableToolStripMenuItem.Text = "Enable";
             enableToolStripMenuItem.Click += enableToolStripMenuItem_Click;
             // 
             // disableToolStripMenuItem
             // 
             disableToolStripMenuItem.Name = "disableToolStripMenuItem";
-            disableToolStripMenuItem.Size = new Size(180, 22);
+            disableToolStripMenuItem.Size = new Size(112, 22);
             disableToolStripMenuItem.Text = "Disable";
             disableToolStripMenuItem.Click += disableToolStripMenuItem_Click;
+            // 
+            // iOPriorityToolStripMenuItem
+            // 
+            iOPriorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { veryLowToolStripMenuItem, lowToolStripMenuItem, normalToolStripMenuItem, highToolStripMenuItem });
+            iOPriorityToolStripMenuItem.Name = "iOPriorityToolStripMenuItem";
+            iOPriorityToolStripMenuItem.Size = new Size(132, 22);
+            iOPriorityToolStripMenuItem.Text = "I/O Priority";
+            // 
+            // veryLowToolStripMenuItem
+            // 
+            veryLowToolStripMenuItem.Name = "veryLowToolStripMenuItem";
+            veryLowToolStripMenuItem.Size = new Size(180, 22);
+            veryLowToolStripMenuItem.Text = "VeryLow";
+            veryLowToolStripMenuItem.Click += veryLowToolStripMenuItem_Click;
+            // 
+            // lowToolStripMenuItem
+            // 
+            lowToolStripMenuItem.Name = "lowToolStripMenuItem";
+            lowToolStripMenuItem.Size = new Size(180, 22);
+            lowToolStripMenuItem.Text = "Low";
+            lowToolStripMenuItem.Click += lowToolStripMenuItem_Click;
+            // 
+            // normalToolStripMenuItem
+            // 
+            normalToolStripMenuItem.Name = "normalToolStripMenuItem";
+            normalToolStripMenuItem.Size = new Size(180, 22);
+            normalToolStripMenuItem.Text = "Normal";
+            normalToolStripMenuItem.Click += normalToolStripMenuItem_Click;
+            // 
+            // highToolStripMenuItem
+            // 
+            highToolStripMenuItem.Name = "highToolStripMenuItem";
+            highToolStripMenuItem.Size = new Size(180, 22);
+            highToolStripMenuItem.Text = "High";
+            highToolStripMenuItem.Click += highToolStripMenuItem_Click;
+            // 
+            // priorityToolStripMenuItem
+            // 
+            priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem, lowToolStripMenuItem1 });
+            priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
+            priorityToolStripMenuItem.Size = new Size(132, 22);
+            priorityToolStripMenuItem.Text = "Priority";
+            // 
+            // realTimedangerToolStripMenuItem
+            // 
+            realTimedangerToolStripMenuItem.Name = "realTimedangerToolStripMenuItem";
+            realTimedangerToolStripMenuItem.Size = new Size(180, 22);
+            realTimedangerToolStripMenuItem.Text = "RealTime(danger)";
+            // 
+            // highToolStripMenuItem1
+            // 
+            highToolStripMenuItem1.Name = "highToolStripMenuItem1";
+            highToolStripMenuItem1.Size = new Size(180, 22);
+            highToolStripMenuItem1.Text = "High";
+            // 
+            // aboveNormalToolStripMenuItem
+            // 
+            aboveNormalToolStripMenuItem.Name = "aboveNormalToolStripMenuItem";
+            aboveNormalToolStripMenuItem.Size = new Size(180, 22);
+            aboveNormalToolStripMenuItem.Text = "Above Normal";
+            // 
+            // normalToolStripMenuItem1
+            // 
+            normalToolStripMenuItem1.Name = "normalToolStripMenuItem1";
+            normalToolStripMenuItem1.Size = new Size(180, 22);
+            normalToolStripMenuItem1.Text = "Normal";
+            // 
+            // belowNormalToolStripMenuItem
+            // 
+            belowNormalToolStripMenuItem.Name = "belowNormalToolStripMenuItem";
+            belowNormalToolStripMenuItem.Size = new Size(180, 22);
+            belowNormalToolStripMenuItem.Text = "Below Normal";
+            // 
+            // lowToolStripMenuItem1
+            // 
+            lowToolStripMenuItem1.Name = "lowToolStripMenuItem1";
+            lowToolStripMenuItem1.Size = new Size(180, 22);
+            lowToolStripMenuItem1.Text = "Low";
             // 
             // MainForm
             // 
@@ -184,5 +274,17 @@
         private ToolStripMenuItem boostToolStripMenuItem;
         private ToolStripMenuItem enableToolStripMenuItem;
         private ToolStripMenuItem disableToolStripMenuItem;
+        private ToolStripMenuItem iOPriorityToolStripMenuItem;
+        private ToolStripMenuItem veryLowToolStripMenuItem;
+        private ToolStripMenuItem lowToolStripMenuItem;
+        private ToolStripMenuItem normalToolStripMenuItem;
+        private ToolStripMenuItem highToolStripMenuItem;
+        private ToolStripMenuItem priorityToolStripMenuItem;
+        private ToolStripMenuItem realTimedangerToolStripMenuItem;
+        private ToolStripMenuItem highToolStripMenuItem1;
+        private ToolStripMenuItem aboveNormalToolStripMenuItem;
+        private ToolStripMenuItem normalToolStripMenuItem1;
+        private ToolStripMenuItem belowNormalToolStripMenuItem;
+        private ToolStripMenuItem lowToolStripMenuItem1;
     }
 }
