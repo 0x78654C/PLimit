@@ -57,8 +57,58 @@ namespace PLimit.Utils
 
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr OpenThread(uint desiredAccess, bool inheritHandle, int threadId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetThreadInformation(
+    IntPtr hThread,
+    THREAD_INFORMATION_CLASS infoClass,
+    ref IO_PRIORITY_HINT info,
+    int infoSize);
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
         public ProcessesManage() { }
 
+        /// <summary>
+        /// Set IO priority of a thread.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
+        {
+            // const uint THREAD_SET_INFORMATION = 0x0020;
+            // const uint THREAD_QUERY_INFORMATION = 0x0040;
+            const uint THREAD_ALL_ACCESS = 0x1F03FF;
+            IntPtr hThread = OpenThread(THREAD_ALL_ACCESS, false, t.Id);
+
+            if (hThread == IntPtr.Zero)
+                return false;
+
+            bool ok = SetThreadInformation(
+                hThread,
+                THREAD_INFORMATION_CLASS.ThreadIoPriority,
+                ref priority,
+                sizeof(int));
+
+            CloseHandle(hThread);
+            return ok;
+        }
+
+        /// <summary>
+        /// Set IO priority for all threads in a process.
+        /// </summary>
+        /// <param name="processId"></param>
+        /// <param name="priority"></param>
+        public void SetIoPriorityAllThreads(int processId, IO_PRIORITY_HINT priority)
+        {
+            var getProcess = Process.GetProcessById(processId);
+            foreach (ProcessThread thread in getProcess.Threads)
+            {
+                SetIoPriority(thread, priority);
+            }
+        }
 
         /// <summary>
         /// Get IO priority of a thread.
