@@ -76,7 +76,7 @@ namespace PLimit.Utils
         /// <param name="t"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
+        private static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
         {
             // const uint THREAD_SET_INFORMATION = 0x0020;
             // const uint THREAD_QUERY_INFORMATION = 0x0040;
@@ -105,9 +105,7 @@ namespace PLimit.Utils
         {
             var getProcess = Process.GetProcessById(processId);
             foreach (ProcessThread thread in getProcess.Threads)
-            {
                 SetIoPriority(thread, priority);
-            }
         }
 
         /// <summary>
@@ -152,10 +150,9 @@ namespace PLimit.Utils
                     var cpus = CountBits(process.ProcessorAffinity.ToInt64());
                     var io = "";
                     foreach (ProcessThread thread in process.Threads)
-                    {
                         io = GetIoPriority(thread).ToString();
-                    }
-                    var listViewItem = new ListViewItem([process.ProcessName, process.Id.ToString(), process.PriorityClass.ToString(), cpus.ToString(), io, disabled.ToString()]);
+                    var efficiencyMode = EfficiencyModeHelper.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+                    var listViewItem = new ListViewItem([process.ProcessName, process.Id.ToString(), process.PriorityClass.ToString(), cpus.ToString(), io, disabled.ToString(), efficiencyMode]);
                     listView.Items.Add(listViewItem);
                 }
             }
