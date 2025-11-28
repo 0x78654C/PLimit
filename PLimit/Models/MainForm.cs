@@ -188,6 +188,9 @@ namespace PLimit
         }
         #endregion
 
+
+        #region Priority Class Menu Events
+
         /// <summary>
         /// Set process priority to High on selected process event.
         /// </summary>
@@ -201,5 +204,94 @@ namespace PLimit
             RefreshProcessList();
             SearchProcess();
         }
+
+        /// <summary>
+        /// Set process priority to Real Time on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void realTimedangerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Set process priority to Above Normal on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void aboveNormalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Set process priority to Normal on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void normalToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Set process priority to Below Normal on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void belowNormalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+        #endregion
+
+        #region Efificiency Mode Menu Events
+
+        /// <summary>
+        /// Enable efficiency mode on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void enableToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setEfficiencyMode = new EfficiencyModeHelper();
+            setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+
+
+        /// <summary>
+        /// Disable efficiency mode on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void disableToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setEfficiencyMode = new EfficiencyModeHelper();
+            setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
+            RefreshProcessList();
+            SearchProcess();
+        }
+        #endregion
     }
 }
