@@ -56,7 +56,6 @@
             normalToolStripMenuItem1 = new ToolStripMenuItem();
             belowNormalToolStripMenuItem = new ToolStripMenuItem();
             afinityToolStripMenuItem = new ToolStripMenuItem();
-            cPU0ToolStripMenuItem = new ToolStripMenuItem();
             efficiencyModeToolStripMenuItem = new ToolStripMenuItem();
             enableToolStripMenuItem1 = new ToolStripMenuItem();
             disableToolStripMenuItem1 = new ToolStripMenuItem();
@@ -147,26 +146,26 @@
             // 
             actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(160, 114);
+            actionMenuStrip.Size = new Size(181, 136);
             // 
             // boostToolStripMenuItem
             // 
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
-            boostToolStripMenuItem.Size = new Size(159, 22);
+            boostToolStripMenuItem.Size = new Size(180, 22);
             boostToolStripMenuItem.Text = "Boost";
             // 
             // enableToolStripMenuItem
             // 
             enableToolStripMenuItem.Name = "enableToolStripMenuItem";
-            enableToolStripMenuItem.Size = new Size(180, 22);
+            enableToolStripMenuItem.Size = new Size(112, 22);
             enableToolStripMenuItem.Text = "Enable";
             enableToolStripMenuItem.Click += enableToolStripMenuItem_Click;
             // 
             // disableToolStripMenuItem
             // 
             disableToolStripMenuItem.Name = "disableToolStripMenuItem";
-            disableToolStripMenuItem.Size = new Size(180, 22);
+            disableToolStripMenuItem.Size = new Size(112, 22);
             disableToolStripMenuItem.Text = "Disable";
             disableToolStripMenuItem.Click += disableToolStripMenuItem_Click;
             // 
@@ -174,7 +173,7 @@
             // 
             iOPriorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { veryLowToolStripMenuItem, lowToolStripMenuItem, normalToolStripMenuItem, highToolStripMenuItem });
             iOPriorityToolStripMenuItem.Name = "iOPriorityToolStripMenuItem";
-            iOPriorityToolStripMenuItem.Size = new Size(159, 22);
+            iOPriorityToolStripMenuItem.Size = new Size(180, 22);
             iOPriorityToolStripMenuItem.Text = "I/O Priority";
             // 
             // veryLowToolStripMenuItem
@@ -209,7 +208,7 @@
             // 
             priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem });
             priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
-            priorityToolStripMenuItem.Size = new Size(159, 22);
+            priorityToolStripMenuItem.Size = new Size(180, 22);
             priorityToolStripMenuItem.Text = "Priority";
             // 
             // realTimedangerToolStripMenuItem
@@ -249,35 +248,28 @@
             // 
             // afinityToolStripMenuItem
             // 
-            afinityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { cPU0ToolStripMenuItem });
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
-            afinityToolStripMenuItem.Size = new Size(159, 22);
+            afinityToolStripMenuItem.Size = new Size(180, 22);
             afinityToolStripMenuItem.Text = "Afinity";
-            // 
-            // cPU0ToolStripMenuItem
-            // 
-            cPU0ToolStripMenuItem.Name = "cPU0ToolStripMenuItem";
-            cPU0ToolStripMenuItem.Size = new Size(106, 22);
-            cPU0ToolStripMenuItem.Text = "CPU 0";
             // 
             // efficiencyModeToolStripMenuItem
             // 
             efficiencyModeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem1, disableToolStripMenuItem1 });
             efficiencyModeToolStripMenuItem.Name = "efficiencyModeToolStripMenuItem";
-            efficiencyModeToolStripMenuItem.Size = new Size(159, 22);
+            efficiencyModeToolStripMenuItem.Size = new Size(180, 22);
             efficiencyModeToolStripMenuItem.Text = "Efficiency Mode";
             // 
             // enableToolStripMenuItem1
             // 
             enableToolStripMenuItem1.Name = "enableToolStripMenuItem1";
-            enableToolStripMenuItem1.Size = new Size(180, 22);
+            enableToolStripMenuItem1.Size = new Size(112, 22);
             enableToolStripMenuItem1.Text = "Enable";
             enableToolStripMenuItem1.Click += enableToolStripMenuItem1_Click;
             // 
             // disableToolStripMenuItem1
             // 
             disableToolStripMenuItem1.Name = "disableToolStripMenuItem1";
-            disableToolStripMenuItem1.Size = new Size(180, 22);
+            disableToolStripMenuItem1.Size = new Size(112, 22);
             disableToolStripMenuItem1.Text = "Disable";
             disableToolStripMenuItem1.Click += disableToolStripMenuItem1_Click;
             // 
@@ -329,7 +321,6 @@
         private ToolStripMenuItem normalToolStripMenuItem1;
         private ToolStripMenuItem belowNormalToolStripMenuItem;
         private ToolStripMenuItem afinityToolStripMenuItem;
-        private ToolStripMenuItem cPU0ToolStripMenuItem;
         private ColumnHeader efficiencyMode;
         private ToolStripMenuItem efficiencyModeToolStripMenuItem;
         private ToolStripMenuItem enableToolStripMenuItem1;
