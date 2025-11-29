@@ -24,6 +24,29 @@ namespace PLimit
             _backGroundWorker.RunWorkerAsync();
         }
 
+
+        private void LoadCoresMenu()
+        {
+            var processorsCount = Environment.ProcessorCount;
+            for (int i = 0; i < processorsCount; i++)
+            {
+                var coreToolStripMenuItem = new ToolStripMenuItem
+                {
+                    Text = $"Core {i}",
+                    CheckOnClick = true,
+                    Checked = true,
+                };
+                coreToolStripMenuItem.Click += CoreToolStripMenuItem_Click;
+                afinityToolStripMenuItem.DropDownItems.Add(coreToolStripMenuItem);
+            }
+        }
+
+        private void CoreToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+
         /// <summary>
         /// Background worker for load runing processes.
         /// </summary>
@@ -35,6 +58,7 @@ namespace PLimit
             {
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
+                LoadCoresMenu();
             });
         }
 
