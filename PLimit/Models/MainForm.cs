@@ -97,6 +97,7 @@ namespace PLimit
             }
         }
 
+        #region Boost Priority Menu Events
         /// <summary>
         /// Disable priority boost on selected process event.
         /// </summary>
@@ -110,8 +111,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -119,11 +120,6 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void processesListBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void disableToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
@@ -132,10 +128,11 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
+        #endregion
 
         #region IO Priority Menu Events
         /// <summary>
@@ -151,8 +148,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -168,8 +165,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -185,8 +182,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
 
@@ -203,8 +200,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
         #endregion
 
@@ -224,8 +221,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -241,8 +238,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -258,8 +255,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -275,8 +272,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
         /// <summary>
@@ -292,8 +289,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
-            }); ;
+            });
+            SearchProcess();
         }
         #endregion
 
@@ -312,8 +309,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
 
 
@@ -330,8 +327,8 @@ namespace PLimit
             this.Invoke(delegate
             {
                 RefreshProcessList();
-                SearchProcess();
             });
+            SearchProcess();
         }
         #endregion
 
@@ -413,6 +410,25 @@ namespace PLimit
             {
                 // access denied / process exited / 32-bit limitations / etc.
                 // Optional: MessageBox.Show("Couldn't change affinity.");
+            }
+            this.Invoke(delegate
+            {
+                RefreshProcessList();
+            });
+            SearchProcess();
+        }
+
+        /// <summary>
+        /// Search event on Enter key press.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void searchProcessTxt_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                SearchProcess();
             }
         }
     }

@@ -64,6 +64,7 @@
             // 
             // processesListBox
             // 
+            processesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             processesListBox.Columns.AddRange(new ColumnHeader[] { processName, processId, priority, afinity, ioPriority, boost, efficiencyMode });
             processesListBox.HideSelection = true;
             processesListBox.Location = new Point(12, 41);
@@ -74,7 +75,6 @@
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
             processesListBox.View = View.Details;
-            processesListBox.SelectedIndexChanged += processesListBox_SelectedIndexChanged;
             processesListBox.MouseClick += processesListBox_MouseClick;
             // 
             // processName
@@ -114,6 +114,7 @@
             // 
             // searchProcessBtn
             // 
+            searchProcessBtn.Anchor = AnchorStyles.Top;
             searchProcessBtn.Enabled = false;
             searchProcessBtn.Location = new Point(499, 12);
             searchProcessBtn.Name = "searchProcessBtn";
@@ -125,15 +126,18 @@
             // 
             // searchProcessTxt
             // 
+            searchProcessTxt.Anchor = AnchorStyles.Top;
             searchProcessTxt.Location = new Point(260, 13);
             searchProcessTxt.Name = "searchProcessTxt";
             searchProcessTxt.Size = new Size(233, 23);
             searchProcessTxt.TabIndex = 6;
             searchProcessTxt.TextAlign = HorizontalAlignment.Center;
             searchProcessTxt.TextChanged += searchProcessTxt_TextChanged;
+            searchProcessTxt.KeyDown += searchProcessTxt_KeyDown;
             // 
             // refreshProcessListBtn
             // 
+            refreshProcessListBtn.Anchor = AnchorStyles.Top;
             refreshProcessListBtn.Location = new Point(575, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
             refreshProcessListBtn.Size = new Size(75, 23);
@@ -283,8 +287,6 @@
             Controls.Add(searchProcessTxt);
             Controls.Add(refreshProcessListBtn);
             Controls.Add(processesListBox);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
