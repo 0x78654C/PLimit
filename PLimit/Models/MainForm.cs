@@ -7,6 +7,10 @@ namespace PLimit
     public partial class MainForm : Form
     {
         private BackgroundWorker? _backGroundWorker;
+        private int? _lastPid;
+        private int _lastOffsetFromTop; // selectedIndex - topIndex
+        private int _lastTopIndex;
+
         public MainForm()
         {
             InitializeComponent();
@@ -40,6 +44,62 @@ namespace PLimit
             });
         }
 
+        private void SaveListViewPosition()
+        {
+            _lastTopIndex = ListViewScroll.SaveTopIndex(processesListBox);
+
+            int anchorIndex =
+                processesListBox.SelectedIndices.Count > 0 ? processesListBox.SelectedIndices[0] :
+                processesListBox.FocusedItem != null ? processesListBox.FocusedItem.Index :
+                _lastTopIndex;
+
+            _lastOffsetFromTop = anchorIndex - _lastTopIndex;
+
+            // PID is in SubItems[1] in your code
+            if (processesListBox.Items.Count > 0 && anchorIndex >= 0 && anchorIndex < processesListBox.Items.Count &&
+                int.TryParse(processesListBox.Items[anchorIndex].SubItems[1].Text, out int pid))
+                _lastPid = pid;
+            else
+                _lastPid = null;
+        }
+
+        private void RestoreListViewPosition()
+        {
+            if (processesListBox.Items.Count == 0)
+                return;
+
+            // Try to restore by PID (best)
+            if (_lastPid.HasValue)
+            {
+                string pidText = _lastPid.Value.ToString();
+                ListViewItem found = null;
+
+                foreach (ListViewItem it in processesListBox.Items)
+                {
+                    if (it.SubItems.Count > 1 && it.SubItems[1].Text == pidText)
+                    {
+                        found = it;
+                        break;
+                    }
+                }
+
+                if (found != null)
+                {
+                    int desiredTop = Math.Max(0, found.Index - _lastOffsetFromTop);
+
+                    ListViewScroll.RestoreTopIndex(processesListBox, desiredTop);
+
+                    found.Selected = true;
+                    found.Focused = true;
+                    processesListBox.EnsureVisible(found.Index);
+                    return;
+                }
+            }
+
+            // Fallback: restore old top index (may be different item)
+            ListViewScroll.RestoreTopIndex(processesListBox, _lastTopIndex);
+        }
+
         /// <summary>
         /// Refresh process list button click event.
         /// </summary>
@@ -62,6 +122,8 @@ namespace PLimit
 
         private void SearchProcess(bool isMessage = true)
         {
+            if(searchProcessTxt.Text.Length == 0)
+                return;
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
             searchProcess.SearchProcess(ref processesListBox, search, isMessage);
@@ -71,8 +133,10 @@ namespace PLimit
         {
             this.Invoke(delegate
             {
+                SaveListViewPosition();
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
+                RestoreListViewPosition();
             });
         }
 
