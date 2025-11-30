@@ -159,6 +159,7 @@ namespace PLimit.Utils
             }
         }
 
+
         /// <summary>
         /// Set priority class for a process.
         /// </summary>
@@ -252,6 +253,7 @@ namespace PLimit.Utils
                     CloseHandle(tokenHandle);
             }
         }
+
 
         /// <summary>
         /// Gets the number of set bits in a long value.
