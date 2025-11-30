@@ -22,34 +22,6 @@ namespace PLimit
             _backGroundWorker = new BackgroundWorker();
             _backGroundWorker.DoWork += _backGroundWorker_DoWork;
             _backGroundWorker.RunWorkerAsync();
-            this.Invoke(delegate
-            {
-                LoadCoresMenu();
-            });
-        }
-
-        /// <summary>
-        /// Load cores menu items.
-        /// </summary>
-        private void LoadCoresMenu()
-        {
-            var processorsCount = Environment.ProcessorCount;
-            for (int i = 0; i < processorsCount; i++)
-            {
-                var coreToolStripMenuItem = new ToolStripMenuItem
-                {
-                    Text = $"Core {i}",
-                    CheckOnClick = true,
-                    Checked = true,
-                };
-                coreToolStripMenuItem.Click += CoreToolStripMenuItem_Click;
-                afinityToolStripMenuItem.DropDownItems.Add(coreToolStripMenuItem);
-            }
-        }
-
-        private void CoreToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
         }
 
 
@@ -64,7 +36,6 @@ namespace PLimit
             {
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
-                LoadCoresMenu();
             });
         }
 
@@ -362,5 +333,86 @@ namespace PLimit
             });
         }
         #endregion
+
+        /// <summary>
+        /// Load processor affinity submenu event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void afinityToolStripMenuItem_MouseHover(object sender, EventArgs e)
+        {
+            afinityToolStripMenuItem.DropDownItems.Clear();
+
+            if (processesListBox.SelectedItems.Count == 0)
+                return;
+
+            if (!int.TryParse(processesListBox.SelectedItems[0].SubItems[1].Text, out int pid))
+                return;
+
+            Process p;
+            try { p = Process.GetProcessById(pid); }
+            catch { return; }
+
+            afinityToolStripMenuItem.Tag = pid; // store PID for click handler
+
+            long mask = (long)p.ProcessorAffinity;     // bitmask
+            int coreCount = Environment.ProcessorCount; // how many logical CPU cores Windows reports
+
+            for (int core = 0; core < coreCount; core++)
+            {
+                bool isSet = (mask & (1L << core)) != 0;
+
+                var coreItem = new ToolStripMenuItem($"Core {core}")
+                {
+                    CheckOnClick = true,
+                    Checked = isSet,
+                    Tag = core // store core index
+                };
+
+                coreItem.Click += CoreToolStripMenuItem_Click;
+                afinityToolStripMenuItem.DropDownItems.Add(coreItem);
+            }
+        }
+
+        /// <summary>
+        /// Set processor affinity (enable/disable cores) event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CoreToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (afinityToolStripMenuItem.Tag is not int pid)
+                return;
+
+            Process p;
+            try { p = Process.GetProcessById(pid); }
+            catch { return; }
+
+            long newMask = 0;
+
+            foreach (ToolStripItem tsi in afinityToolStripMenuItem.DropDownItems)
+            {
+                if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
+                    newMask |= (1L << core);
+            }
+
+            // must keep at least 1 core enabled
+            if (newMask == 0)
+            {
+                if (sender is ToolStripMenuItem clicked)
+                    clicked.Checked = true;
+                return;
+            }
+
+            try
+            {
+                p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
+            }
+            catch
+            {
+                // access denied / process exited / 32-bit limitations / etc.
+                // Optional: MessageBox.Show("Couldn't change affinity.");
+            }
+        }
     }
 }

@@ -251,6 +251,7 @@
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
             afinityToolStripMenuItem.Size = new Size(180, 22);
             afinityToolStripMenuItem.Text = "Afinity";
+            afinityToolStripMenuItem.MouseHover += afinityToolStripMenuItem_MouseHover;
             // 
             // efficiencyModeToolStripMenuItem
             // 
