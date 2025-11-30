@@ -135,6 +135,9 @@ namespace PLimit
             searchProcess.SearchProcess(ref processesListBox, search, isMessage);
         }
 
+        /// <summary>
+        /// Refresh process list method.
+        /// </summary>
         private void RefreshProcessList()
         {
             this.Invoke(delegate
