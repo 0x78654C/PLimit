@@ -116,7 +116,7 @@
             // 
             searchProcessBtn.Anchor = AnchorStyles.Top;
             searchProcessBtn.Enabled = false;
-            searchProcessBtn.Location = new Point(499, 12);
+            searchProcessBtn.Location = new Point(512, 12);
             searchProcessBtn.Name = "searchProcessBtn";
             searchProcessBtn.Size = new Size(75, 23);
             searchProcessBtn.TabIndex = 7;
@@ -127,7 +127,7 @@
             // searchProcessTxt
             // 
             searchProcessTxt.Anchor = AnchorStyles.Top;
-            searchProcessTxt.Location = new Point(260, 13);
+            searchProcessTxt.Location = new Point(273, 13);
             searchProcessTxt.Name = "searchProcessTxt";
             searchProcessTxt.Size = new Size(233, 23);
             searchProcessTxt.TabIndex = 6;
@@ -138,7 +138,7 @@
             // refreshProcessListBtn
             // 
             refreshProcessListBtn.Anchor = AnchorStyles.Top;
-            refreshProcessListBtn.Location = new Point(575, 12);
+            refreshProcessListBtn.Location = new Point(588, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
             refreshProcessListBtn.Size = new Size(75, 23);
             refreshProcessListBtn.TabIndex = 5;

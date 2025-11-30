@@ -69,9 +69,12 @@ namespace PLimit
 
         private void RefreshProcessList()
         {
-            _backGroundWorker = new BackgroundWorker();
-            _backGroundWorker.DoWork += _backGroundWorker_DoWork;
-            _backGroundWorker.RunWorkerAsync();
+            this.Invoke(delegate
+            {
+                var getProcesses = new ProcessesManage();
+                getProcesses.GetProcesses(ref processesListBox);
+                searchProcessTxt.SetWatermark("Enter process name or PID...");
+            });
         }
 
         /// <summary>
@@ -108,11 +111,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setBoost = new ProcessesManage();
             setBoost.SetBoost(true, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -125,11 +128,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setBoost = new ProcessesManage();
             setBoost.SetBoost(false, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         #endregion
@@ -145,11 +148,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -162,11 +165,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -179,11 +182,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
 
@@ -197,11 +200,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
         #endregion
 
@@ -218,11 +221,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -235,11 +238,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -252,11 +255,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -269,11 +272,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
@@ -286,11 +289,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
         #endregion
 
@@ -306,11 +309,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
 
@@ -324,11 +327,11 @@ namespace PLimit
             var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
         #endregion
 
@@ -411,11 +414,11 @@ namespace PLimit
                 // access denied / process exited / 32-bit limitations / etc.
                 // Optional: MessageBox.Show("Couldn't change affinity.");
             }
-            this.Invoke(delegate
+            BeginInvoke(new Action(() =>
             {
                 RefreshProcessList();
-            });
-            SearchProcess();
+                SearchProcess();
+            }));
         }
 
         /// <summary>
