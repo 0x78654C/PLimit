@@ -28,7 +28,6 @@ namespace PLimit.Utils
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
 
-        private int Cores = Environment.ProcessorCount;
 
         public enum IO_PRIORITY_HINT
         {
