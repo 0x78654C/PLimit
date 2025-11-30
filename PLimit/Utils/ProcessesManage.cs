@@ -135,26 +135,57 @@ namespace PLimit.Utils
         /// Add running processes to list box.
         /// </summary>
         /// <param name="listBox"></param>
-        public void GetProcesses(ref ListView listView)
+        public void GetProcesses(ref DoubleBufferedListView listView)
         {
-            listView.Items.Clear();
-            var processes = Process.GetProcesses();
-            foreach (var process in processes)
+            listView.BeginUpdate();
+            try
             {
-                var user = GetProcessUser(process);
-                if (user == Environment.UserName)
+                listView.Items.Clear();
+
+                var processes = Process.GetProcesses();
+                foreach (var process in processes)
                 {
-                    IntPtr handle = process.Handle;
-                    bool disabled;
-                    GetProcessPriorityBoost(handle, out disabled);
-                    var cpus = CountBits(process.ProcessorAffinity.ToInt64());
-                    var io = "";
-                    foreach (ProcessThread thread in process.Threads)
-                        io = GetIoPriority(thread).ToString();
-                    var efficiencyMode = EfficiencyModeHelper.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
-                    var listViewItem = new ListViewItem([process.ProcessName, process.Id.ToString(), process.PriorityClass.ToString(), cpus.ToString(), io, disabled.ToString(), efficiencyMode]);
-                    listView.Items.Add(listViewItem);
+                    var user = GetProcessUser(process);
+                    if (user != Environment.UserName) continue;
+
+                    IntPtr handle = IntPtr.Zero;
+                    try
+                    {
+                        handle = process.Handle;
+
+                        bool disabled;
+                        GetProcessPriorityBoost(handle, out disabled);
+
+                        var cpus = CountBits(process.ProcessorAffinity.ToInt64());
+
+                        var io = "";
+                        foreach (ProcessThread thread in process.Threads)
+                            io = GetIoPriority(thread).ToString();
+
+                        var efficiencyMode = EfficiencyModeHelper.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+
+                        var item = new ListViewItem(new[]
+                        {
+                    process.ProcessName,
+                    process.Id.ToString(),
+                    process.PriorityClass.ToString(),
+                    cpus.ToString(),
+                    io,
+                    disabled.ToString(),
+                    efficiencyMode
+                });
+
+                        listView.Items.Add(item);
+                    }
+                    catch
+                    {
+                        // process may exit / access denied etc. skip it
+                    }
                 }
+            }
+            finally
+            {
+                listView.EndUpdate();
             }
         }
 
@@ -201,13 +232,13 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="listView"></param>
         /// <param name="searchString"></param>
-        public void SearchProcess(ref ListView listView, string searchString)
+        public void SearchProcess(ref DoubleBufferedListView listView, string searchString, bool isMessage=true)
         {
             ListViewItem? foundItem =
                 listView.FindItemWithText(searchString, true, 0, true);
             if (foundItem != null)
                 listView.TopItem = foundItem;
-            else
+            else if(isMessage)
                 MessageBox.Show($"Process '{searchString}' was not found. Try refresh the list!", "InjectX GUI", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
