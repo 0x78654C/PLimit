@@ -36,6 +36,7 @@ namespace PLimit
             {
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
+                searchProcessTxt.SetWatermark("Enter process name or PID...");
             });
         }
 

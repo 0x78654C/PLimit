@@ -115,7 +115,7 @@
             // searchProcessBtn
             // 
             searchProcessBtn.Enabled = false;
-            searchProcessBtn.Location = new Point(458, 11);
+            searchProcessBtn.Location = new Point(499, 12);
             searchProcessBtn.Name = "searchProcessBtn";
             searchProcessBtn.Size = new Size(75, 23);
             searchProcessBtn.TabIndex = 7;
@@ -125,7 +125,7 @@
             // 
             // searchProcessTxt
             // 
-            searchProcessTxt.Location = new Point(219, 12);
+            searchProcessTxt.Location = new Point(260, 13);
             searchProcessTxt.Name = "searchProcessTxt";
             searchProcessTxt.Size = new Size(233, 23);
             searchProcessTxt.TabIndex = 6;
@@ -134,7 +134,7 @@
             // 
             // refreshProcessListBtn
             // 
-            refreshProcessListBtn.Location = new Point(534, 11);
+            refreshProcessListBtn.Location = new Point(575, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
             refreshProcessListBtn.Size = new Size(75, 23);
             refreshProcessListBtn.TabIndex = 5;
@@ -146,13 +146,13 @@
             // 
             actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(181, 136);
+            actionMenuStrip.Size = new Size(160, 114);
             // 
             // boostToolStripMenuItem
             // 
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
-            boostToolStripMenuItem.Size = new Size(180, 22);
+            boostToolStripMenuItem.Size = new Size(159, 22);
             boostToolStripMenuItem.Text = "Boost";
             // 
             // enableToolStripMenuItem
@@ -173,7 +173,7 @@
             // 
             iOPriorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { veryLowToolStripMenuItem, lowToolStripMenuItem, normalToolStripMenuItem, highToolStripMenuItem });
             iOPriorityToolStripMenuItem.Name = "iOPriorityToolStripMenuItem";
-            iOPriorityToolStripMenuItem.Size = new Size(180, 22);
+            iOPriorityToolStripMenuItem.Size = new Size(159, 22);
             iOPriorityToolStripMenuItem.Text = "I/O Priority";
             // 
             // veryLowToolStripMenuItem
@@ -208,7 +208,7 @@
             // 
             priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem });
             priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
-            priorityToolStripMenuItem.Size = new Size(180, 22);
+            priorityToolStripMenuItem.Size = new Size(159, 22);
             priorityToolStripMenuItem.Text = "Priority";
             // 
             // realTimedangerToolStripMenuItem
@@ -249,7 +249,7 @@
             // afinityToolStripMenuItem
             // 
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
-            afinityToolStripMenuItem.Size = new Size(180, 22);
+            afinityToolStripMenuItem.Size = new Size(159, 22);
             afinityToolStripMenuItem.Text = "Afinity";
             afinityToolStripMenuItem.MouseHover += afinityToolStripMenuItem_MouseHover;
             // 
@@ -257,7 +257,7 @@
             // 
             efficiencyModeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem1, disableToolStripMenuItem1 });
             efficiencyModeToolStripMenuItem.Name = "efficiencyModeToolStripMenuItem";
-            efficiencyModeToolStripMenuItem.Size = new Size(180, 22);
+            efficiencyModeToolStripMenuItem.Size = new Size(159, 22);
             efficiencyModeToolStripMenuItem.Text = "Efficiency Mode";
             // 
             // enableToolStripMenuItem1
