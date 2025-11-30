@@ -20,12 +20,22 @@ namespace PLimit.Utils
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int SendMessage(IntPtr hWnd, int msg, int wParam, ref RECT lParam);
 
+        /// <summary>
+        /// Saves the current top index of the ListView.
+        /// </summary>
+        /// <param name="lv"></param>
+        /// <returns></returns>
         public static int SaveTopIndex(ListView lv)
         {
             if (!lv.IsHandleCreated) lv.CreateControl();
             return SendMessage(lv.Handle, LVM_GETTOPINDEX, 0, 0);
         }
 
+        /// <summary>
+        /// Restores the ListView to the specified top index.
+        /// </summary>
+        /// <param name="lv"></param>
+        /// <param name="topIndex"></param>
         public static void RestoreTopIndex(ListView lv, int topIndex)
         {
             if (lv.Items.Count == 0) return;

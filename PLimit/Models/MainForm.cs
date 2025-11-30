@@ -44,6 +44,9 @@ namespace PLimit
             });
         }
 
+        /// <summary>
+        /// Save ListView position (top index and selected item).
+        /// </summary>
         private void SaveListViewPosition()
         {
             _lastTopIndex = ListViewScroll.SaveTopIndex(processesListBox);
@@ -63,6 +66,9 @@ namespace PLimit
                 _lastPid = null;
         }
 
+        /// <summary>
+        /// Restore ListView position (top index and selected item).
+        /// </summary>
         private void RestoreListViewPosition()
         {
             if (processesListBox.Items.Count == 0)
