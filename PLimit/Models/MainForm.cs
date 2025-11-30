@@ -41,6 +41,7 @@ namespace PLimit
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
                 searchProcessTxt.SetWatermark("Enter process name or PID...");
+                countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
             });
         }
 
@@ -145,6 +146,7 @@ namespace PLimit
                 SaveListViewPosition();
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
+                countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
                 RestoreListViewPosition();
             });
         }

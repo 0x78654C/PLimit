@@ -60,6 +60,7 @@
             enableToolStripMenuItem1 = new ToolStripMenuItem();
             disableToolStripMenuItem1 = new ToolStripMenuItem();
             reloadProcess = new System.Windows.Forms.Timer(components);
+            countProcessesLbl = new Label();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -289,11 +290,21 @@
             reloadProcess.Interval = 1100;
             reloadProcess.Tick += reloadProcess_Tick;
             // 
+            // countProcessesLbl
+            // 
+            countProcessesLbl.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            countProcessesLbl.Location = new Point(9, 432);
+            countProcessesLbl.Name = "countProcessesLbl";
+            countProcessesLbl.Size = new Size(194, 15);
+            countProcessesLbl.TabIndex = 8;
+            countProcessesLbl.Text = "Processes running: 0";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(978, 441);
+            ClientSize = new Size(978, 456);
+            Controls.Add(countProcessesLbl);
             Controls.Add(searchProcessBtn);
             Controls.Add(searchProcessTxt);
             Controls.Add(refreshProcessListBtn);
@@ -341,5 +352,6 @@
         private ToolStripMenuItem enableToolStripMenuItem1;
         private ToolStripMenuItem disableToolStripMenuItem1;
         private System.Windows.Forms.Timer reloadProcess;
+        private Label countProcessesLbl;
     }
 }
