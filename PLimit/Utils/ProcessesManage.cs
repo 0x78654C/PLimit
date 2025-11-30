@@ -232,14 +232,14 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="listView"></param>
         /// <param name="searchString"></param>
-        public void SearchProcess(ref DoubleBufferedListView listView, string searchString, bool isMessage=true)
+        public void SearchProcess(ref DoubleBufferedListView listView, string searchString, bool isMessage = true)
         {
             ListViewItem? foundItem =
                 listView.FindItemWithText(searchString, true, 0, true);
             if (foundItem != null)
                 listView.TopItem = foundItem;
-            else if(isMessage)
-                MessageBox.Show($"Process '{searchString}' was not found. Try refresh the list!", "InjectX GUI", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else if (isMessage)
+                MessageBox.Show($"Process '{searchString}' was not found. Try refresh the list!", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>
