@@ -99,7 +99,7 @@
             // 
             // ioPriority
             // 
-            ioPriority.Text = "I/O priority";
+            ioPriority.Text = "I/O Priority";
             ioPriority.Width = 120;
             // 
             // boost
