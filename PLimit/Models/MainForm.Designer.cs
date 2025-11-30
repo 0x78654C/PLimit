@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            processesListBox = new ListView();
+            processesListBox = new DoubleBufferedListView();
             processName = new ColumnHeader();
             processId = new ColumnHeader();
             priority = new ColumnHeader();
@@ -59,6 +59,7 @@
             efficiencyModeToolStripMenuItem = new ToolStripMenuItem();
             enableToolStripMenuItem1 = new ToolStripMenuItem();
             disableToolStripMenuItem1 = new ToolStripMenuItem();
+            reloadProcess = new System.Windows.Forms.Timer(components);
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -76,6 +77,7 @@
             processesListBox.UseCompatibleStateImageBehavior = false;
             processesListBox.View = View.Details;
             processesListBox.MouseClick += processesListBox_MouseClick;
+            processesListBox.MouseHover += processesListBox_MouseHover;
             // 
             // processName
             // 
@@ -123,6 +125,7 @@
             searchProcessBtn.Text = "Search";
             searchProcessBtn.UseVisualStyleBackColor = true;
             searchProcessBtn.Click += searchProcessBtn_Click;
+            searchProcessBtn.MouseHover += searchProcessBtn_MouseHover;
             // 
             // searchProcessTxt
             // 
@@ -134,6 +137,7 @@
             searchProcessTxt.TextAlign = HorizontalAlignment.Center;
             searchProcessTxt.TextChanged += searchProcessTxt_TextChanged;
             searchProcessTxt.KeyDown += searchProcessTxt_KeyDown;
+            searchProcessTxt.MouseHover += searchProcessTxt_MouseHover;
             // 
             // refreshProcessListBtn
             // 
@@ -145,6 +149,7 @@
             refreshProcessListBtn.Text = "Refresh List (R)";
             refreshProcessListBtn.UseVisualStyleBackColor = true;
             refreshProcessListBtn.Click += refreshProcessListBtn_Click;
+            refreshProcessListBtn.MouseHover += refreshProcessListBtn_MouseHover;
             // 
             // actionMenuStrip
             // 
@@ -278,6 +283,12 @@
             disableToolStripMenuItem1.Text = "Disable";
             disableToolStripMenuItem1.Click += disableToolStripMenuItem1_Click;
             // 
+            // reloadProcess
+            // 
+            reloadProcess.Enabled = true;
+            reloadProcess.Interval = 1050;
+            reloadProcess.Tick += reloadProcess_Tick;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -291,6 +302,7 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
             Load += MainForm_Load;
+            MouseHover += MainForm_MouseHover;
             actionMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -298,7 +310,7 @@
 
         #endregion
 
-        private ListView processesListBox;
+        private DoubleBufferedListView processesListBox;
         private ColumnHeader processName;
         private ColumnHeader processId;
         private ColumnHeader priority;
@@ -328,5 +340,6 @@
         private ToolStripMenuItem efficiencyModeToolStripMenuItem;
         private ToolStripMenuItem enableToolStripMenuItem1;
         private ToolStripMenuItem disableToolStripMenuItem1;
+        private System.Windows.Forms.Timer reloadProcess;
     }
 }

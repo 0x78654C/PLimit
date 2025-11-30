@@ -60,11 +60,11 @@ namespace PLimit
             SearchProcess();
         }
 
-        private void SearchProcess()
+        private void SearchProcess(bool isMessage = true)
         {
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
-            searchProcess.SearchProcess(ref processesListBox, search);
+            searchProcess.SearchProcess(ref processesListBox, search, isMessage);
         }
 
         private void RefreshProcessList()
@@ -73,7 +73,6 @@ namespace PLimit
             {
                 var getProcesses = new ProcessesManage();
                 getProcesses.GetProcesses(ref processesListBox);
-                searchProcessTxt.SetWatermark("Enter process name or PID...");
             });
         }
 
@@ -450,9 +449,79 @@ namespace PLimit
                         RefreshProcessList();
                     else
                         break;
-                        return true;
+                    return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        /// <summary>
+        /// Reload process list timer tick event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void reloadProcess_Tick(object sender, EventArgs e)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                RefreshProcessList();
+                SearchProcess(false);
+            }));
+        }
+
+        /// <summary>
+        /// Stop reloading process list on mouse hover event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void processesListBox_MouseHover(object sender, EventArgs e)
+        {
+            if (reloadProcess.Enabled)
+                reloadProcess.Stop();
+        }
+
+
+        /// <summary>
+        /// Start reloading process list on mouse hover event in WinForm.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainForm_MouseHover(object sender, EventArgs e)
+        {
+            if (!reloadProcess.Enabled)
+                reloadProcess.Start();
+        }
+
+        /// <summary>
+        /// start reloading process list on mouse hover event in search box.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void searchProcessTxt_MouseHover(object sender, EventArgs e)
+        {
+            if (!reloadProcess.Enabled)
+                reloadProcess.Start();
+        }
+
+        /// <summary>
+        /// Start reloading process list on mouse hover event in search button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void searchProcessBtn_MouseHover(object sender, EventArgs e)
+        {
+            if (!reloadProcess.Enabled)
+                reloadProcess.Start();
+        }
+
+        /// <summary>
+        /// Start reloading process list on mouse hover event in refresh button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void refreshProcessListBtn_MouseHover(object sender, EventArgs e)
+        {
+            if (!reloadProcess.Enabled)
+                reloadProcess.Start();
         }
     }
 }
