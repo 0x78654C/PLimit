@@ -286,7 +286,7 @@
             // reloadProcess
             // 
             reloadProcess.Enabled = true;
-            reloadProcess.Interval = 1050;
+            reloadProcess.Interval = 1100;
             reloadProcess.Tick += reloadProcess_Tick;
             // 
             // MainForm
