@@ -434,5 +434,25 @@ namespace PLimit
                 SearchProcess();
             }
         }
+
+        /// <summary>
+        /// Hotkey process event.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="keyData"></param>
+        /// <returns></returns>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.R:
+                    if (!searchProcessTxt.Focused)
+                        RefreshProcessList();
+                    else
+                        break;
+                        return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
     }
 }
