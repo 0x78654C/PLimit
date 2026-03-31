@@ -1,5 +1,4 @@
-﻿
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
@@ -47,7 +46,6 @@ namespace PLimit.Utils
 
         const int ThreadIoPriority = 22; // native THREADINFOCLASS value
         const uint THREAD_SET_INFORMATION = 0x0020;
-        const uint THREAD_QUERY_LIMITED_INFORMATION = 0x0800; // safer than 0x0040 for this case
 
         public enum IO_PRIORITY_HINT : int
         {
