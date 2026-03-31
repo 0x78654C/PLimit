@@ -1,0 +1,119 @@
+﻿using System.Diagnostics;
+
+
+namespace PLimit.Utils
+{
+    public class PriorityProcess
+    {
+        public PriorityProcess() { }
+
+        /// <summary>
+        /// Sets the priority of the process to High.
+        /// This means that the process will have a higher priority than normal processes, but not as high as real-time processes.
+        /// It is suitable for processes that require more CPU time than normal processes but do not need to be prioritized over real-time processes.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+        }
+
+        /// <summary>
+        /// Sets the priority of the process to Above Normal.
+        /// This means that the process will have a higher priority than normal processes, but not as high as real-time processes.
+        /// It is suitable for processes that require more CPU time than normal processes but do not need to be prioritized over real-time processes.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+        }
+
+        /// <summary>
+        /// Sets the priority of the process to Real Time.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+        }
+
+        /// <summary>
+        /// Sets the priority of the process to Normal.
+        /// This means that the process will have a normal priority level, which is the default priority for most processes. 
+        /// It is suitable for processes that require a balanced performance and do not need to be prioritized over other processes.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+        }
+
+
+        /// <summary>
+        /// Sets the priority of the process to Below Normal. 
+        /// This means that the process will have a lower priority than Normal, but higher than Idle. 
+        /// It is useful for processes that are not time-sensitive and can run in the background without affecting the performance of other processes.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        {
+            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var setPriority = new ProcessesManage();
+            setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+        }
+    }
+}
