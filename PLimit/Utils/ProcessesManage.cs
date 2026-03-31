@@ -28,8 +28,28 @@ namespace PLimit.Utils
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
 
+        // native NTSTATUS version
+        [DllImport("ntdll.dll")]
+        private static extern int NtQueryInformationThread(
+            IntPtr ThreadHandle,
+            int ThreadInformationClass,
+            out int ThreadInformation,
+            int ThreadInformationLength,
+            out int ReturnLength);
 
-        public enum IO_PRIORITY_HINT
+        [DllImport("ntdll.dll")]
+        static extern int NtSetInformationThread(
+            IntPtr ThreadHandle,
+            int ThreadInformationClass,
+            ref IO_PRIORITY_HINT ThreadInformation,
+            int ThreadInformationLength
+        );
+
+        const int ThreadIoPriority = 22; // native THREADINFOCLASS value
+        const uint THREAD_SET_INFORMATION = 0x0020;
+        const uint THREAD_QUERY_LIMITED_INFORMATION = 0x0800; // safer than 0x0040 for this case
+
+        public enum IO_PRIORITY_HINT : int
         {
             VeryLow = 0,
             Low = 1,
@@ -78,22 +98,24 @@ namespace PLimit.Utils
         /// <returns></returns>
         private static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
         {
-            // const uint THREAD_SET_INFORMATION = 0x0020;
-            // const uint THREAD_QUERY_INFORMATION = 0x0040;
-            const uint THREAD_ALL_ACCESS = 0x1F03FF;
-            IntPtr hThread = OpenThread(THREAD_ALL_ACCESS, false, t.Id);
-
+            IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, t.Id);
             if (hThread == IntPtr.Zero)
                 return false;
 
-            bool ok = SetThreadInformation(
-                hThread,
-                THREAD_INFORMATION_CLASS.ThreadIoPriority,
-                ref priority,
-                sizeof(int));
+            try
+            {
+                int status = NtSetInformationThread(
+                    hThread,
+                    ThreadIoPriority,
+                    ref priority,
+                    sizeof(IO_PRIORITY_HINT));
 
-            CloseHandle(hThread);
-            return ok;
+                return status == 0;
+            }
+            finally
+            {
+                CloseHandle(hThread);
+            }
         }
 
         /// <summary>
@@ -113,24 +135,36 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static IO_PRIORITY_HINT GetIoPriority(ProcessThread t)
+        public static IO_PRIORITY_HINT? GetIoPriority(ProcessThread t)
         {
-            IntPtr hThread = OpenThread(0x0040 /* QUERY_LIMITED_INFORMATION */, false, t.Id);
-
+            IntPtr hThread = OpenThread(0x0800, false, t.Id); // THREAD_QUERY_LIMITED_INFORMATION
             if (hThread == IntPtr.Zero)
-                return IO_PRIORITY_HINT.Normal;
+                return null;
 
-            IO_PRIORITY_HINT hint;
-            GetThreadInformation(hThread,
-                                 THREAD_INFORMATION_CLASS.ThreadIoPriority,
-                                 out hint,
-                                 sizeof(int));
+            try
+            {
+                int returnLength;
+                int rawValue;
 
-            CloseHandle(hThread);
-            return hint;
+                int status = NtQueryInformationThread(
+                    hThread,
+                    22, // ThreadIoPriority
+                    out rawValue,
+                    sizeof(int),
+                    out returnLength);
+
+                if (status != 0)
+                    return null;
+
+                return Enum.IsDefined(typeof(IO_PRIORITY_HINT), rawValue)
+                    ? (IO_PRIORITY_HINT)rawValue
+                    : null;
+            }
+            finally
+            {
+                CloseHandle(hThread);
+            }
         }
-
-
         /// <summary>
         /// Add running processes to list box.
         /// </summary>
@@ -158,11 +192,15 @@ namespace PLimit.Utils
 
                         var cpus = CountBits(process.ProcessorAffinity.ToInt64());
 
-                        var io = "";
+                        var io = "----";
                         foreach (ProcessThread thread in process.Threads)
                             io = GetIoPriority(thread).ToString();
+                        var efficency = new EfficiencyModeHelper();
+                        var efficiencyMode = "Disable";
 
-                        var efficiencyMode = EfficiencyModeHelper.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+                        //Workaround for efficiency mode, since there is no official way to check if it's enabled or not, we will check if the priority class is set to Idle or BelowNormal, which are the only two options that enable efficiency mode
+                        efficiencyMode = (process.PriorityClass.ToString()=="Idle" || process.PriorityClass.ToString()=="BelowNormal") ? "Enabled" : "Disabled";
+                        // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
 
                         var item = new ListViewItem(new[]
                         {
