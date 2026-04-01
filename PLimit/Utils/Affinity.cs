@@ -18,7 +18,7 @@ namespace PLimit.Utils
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="sender"></param>
-        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender)
+        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask="")
         {
             if (afinityToolStripMenuItem.Tag is not int pid)
                 return;
@@ -42,7 +42,8 @@ namespace PLimit.Utils
                     clicked.Checked = true;
                 return;
             }
-
+            if(!string.IsNullOrEmpty(mask))
+                newMask = Convert.ToInt64(mask);
             try
             {
                 p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
@@ -58,6 +59,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            if (string.IsNullOrEmpty(mask))
+            {
+                var storeAffinity = new StoreSettings(); ;
+                storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
+            }
         }
     }
 }
