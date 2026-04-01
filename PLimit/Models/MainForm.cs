@@ -42,7 +42,18 @@ namespace PLimit
                 getProcesses.GetProcesses(ref processesListBox);
                 searchProcessTxt.SetWatermark("Enter process name or PID...");
                 countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
+                LoadSettins();
             });
+        }
+
+        private void LoadSettins()
+        {
+            var readSettings = new ReadSettings();
+            readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
         }
 
         /// <summary>
@@ -180,7 +191,7 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void enableToolStripMenuItem_Click(object sender, EventArgs e)
+        public void enableToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var boost = new Boost();
             boost.SetBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, true);
