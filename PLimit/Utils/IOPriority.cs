@@ -22,6 +22,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingIO = new StoreSettings();
+            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
         }
 
         /// <summary>
@@ -42,6 +44,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingIO = new StoreSettings();
+            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
         }
 
         /// <summary>
@@ -62,6 +66,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingIO = new StoreSettings();
+            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
         }
 
         /// <summary>
@@ -82,6 +88,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingIO = new StoreSettings();
+            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
         }
     }
 }

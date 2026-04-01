@@ -23,6 +23,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var storeBoost = new StoreSettings();
+            storeBoost.UpdateSetting(StoreSettings.SettingType.Boosted, processesListBox.SelectedItems[0].SubItems[0].Text, isEnable ? "True" : "False");
         }
     }
 }

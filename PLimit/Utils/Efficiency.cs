@@ -24,6 +24,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var storeEfficiency = new StoreSettings();
+            storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "True");
         }
 
         /// <summary>
@@ -46,6 +48,8 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var storeEfficiency = new StoreSettings();
+            storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "False");
         }
     }
 }

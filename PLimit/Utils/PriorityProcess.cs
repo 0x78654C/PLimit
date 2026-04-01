@@ -27,6 +27,8 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingPriority =  new StoreSettings();
+            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
         }
 
         /// <summary>
@@ -49,6 +51,8 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingPriority = new StoreSettings();
+            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
         }
 
         /// <summary>
@@ -69,6 +73,8 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingPriority = new StoreSettings();
+            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
         }
 
         /// <summary>
@@ -91,6 +97,8 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingPriority = new StoreSettings();
+            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
         }
 
 
@@ -114,6 +122,8 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+            var settingPriority = new StoreSettings();
+            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
         }
     }
 }
