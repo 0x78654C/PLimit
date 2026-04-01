@@ -16,9 +16,9 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
             from.BeginInvoke(new Action(() =>
@@ -27,8 +27,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingPriority =  new StoreSettings();
-            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingPriority = new StoreSettings();
+                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+            }
         }
 
         /// <summary>
@@ -40,9 +43,9 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
             from.BeginInvoke(new Action(() =>
@@ -51,8 +54,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingPriority = new StoreSettings();
-            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingPriority = new StoreSettings();
+                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
+            }
         }
 
         /// <summary>
@@ -62,9 +68,9 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
             from.BeginInvoke(new Action(() =>
@@ -73,8 +79,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingPriority = new StoreSettings();
-            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingPriority = new StoreSettings();
+                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
+            }
         }
 
         /// <summary>
@@ -86,9 +95,9 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
             from.BeginInvoke(new Action(() =>
@@ -97,8 +106,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingPriority = new StoreSettings();
-            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingPriority = new StoreSettings();
+                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+            }
         }
 
 
@@ -111,9 +123,9 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
             from.BeginInvoke(new Action(() =>
@@ -122,8 +134,11 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingPriority = new StoreSettings();
-            settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingPriority = new StoreSettings();
+                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
+            }
         }
     }
 }

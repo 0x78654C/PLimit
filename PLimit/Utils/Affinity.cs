@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace PLimit.Utils
 {
@@ -18,31 +19,43 @@ namespace PLimit.Utils
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="sender"></param>
-        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask="")
+        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask = "", string pidId = "")
         {
-            if (afinityToolStripMenuItem.Tag is not int pid)
-                return;
+            int pid;
+            if (!string.IsNullOrWhiteSpace(pidId))
+            {
+                if (!int.TryParse(pidId, out pid))
+                    return;
+            }
+            else
+            {
+                if (!int.TryParse(afinityToolStripMenuItem.Tag?.ToString(), out pid))
+                    return;
+            }
+
 
             Process p;
             try { p = Process.GetProcessById(pid); }
             catch { return; }
 
             long newMask = 0;
-
-            foreach (ToolStripItem tsi in afinityToolStripMenuItem.DropDownItems)
+            if (string.IsNullOrEmpty(pidId))
             {
-                if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
-                    newMask |= (1L << core);
-            }
+                foreach (ToolStripItem tsi in afinityToolStripMenuItem.DropDownItems)
+                {
+                    if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
+                        newMask |= (1L << core);
+                }
 
-            // must keep at least 1 core enabled
-            if (newMask == 0)
-            {
-                if (sender is ToolStripMenuItem clicked)
-                    clicked.Checked = true;
-                return;
+                // must keep at least 1 core enabled
+                if (newMask == 0)
+                {
+                    if (sender is ToolStripMenuItem clicked)
+                        clicked.Checked = true;
+                    return;
+                }
             }
-            if(!string.IsNullOrEmpty(mask))
+            if (!string.IsNullOrEmpty(mask))
                 newMask = Convert.ToInt64(mask);
             try
             {

@@ -11,9 +11,9 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOVeryLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void IOVeryLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
             from.BeginInvoke(new Action(() =>
@@ -22,8 +22,11 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingIO = new StoreSettings();
-            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingIO = new StoreSettings();
+                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
+            }
         }
 
         /// <summary>
@@ -33,9 +36,9 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void IOLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
             from.BeginInvoke(new Action(() =>
@@ -44,8 +47,11 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingIO = new StoreSettings();
-            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingIO = new StoreSettings();
+                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
+            }
         }
 
         /// <summary>
@@ -55,9 +61,9 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IONormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void IONormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
             from.BeginInvoke(new Action(() =>
@@ -66,8 +72,11 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingIO = new StoreSettings();
-            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingIO = new StoreSettings();
+                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+            }
         }
 
         /// <summary>
@@ -77,9 +86,9 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOHighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox)
+        public void IOHighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
             from.BeginInvoke(new Action(() =>
@@ -88,8 +97,11 @@
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
-            var settingIO = new StoreSettings();
-            settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+            if (string.IsNullOrEmpty(pid))
+            {
+                var settingIO = new StoreSettings();
+                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+            }
         }
     }
 }
