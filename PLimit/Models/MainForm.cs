@@ -23,6 +23,7 @@ namespace PLimit
         /// <param name="e"></param>
         private void MainForm_Load(object sender, EventArgs e)
         {
+            checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
             _backGroundWorker = new BackgroundWorker();
             _backGroundWorker.DoWork += _backGroundWorker_DoWork;
             _backGroundWorker.RunWorkerAsync();
@@ -48,12 +49,15 @@ namespace PLimit
 
         private void LoadSettins()
         {
-            var readSettings = new ReadSettings();
-            readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this);
-            readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this);
-            readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
-            readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
-            readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            if (Properties.Settings.Default.isLoadingSettings)
+            {
+                var readSettings = new ReadSettings();
+                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            }
         }
 
         /// <summary>
@@ -495,6 +499,12 @@ namespace PLimit
         {
             if (!reloadProcess.Enabled)
                 reloadProcess.Start();
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+              Properties.Settings.Default.isLoadingSettings = checkBox1.Checked;
+              Properties.Settings.Default.Save();
         }
     }
 }

@@ -61,6 +61,7 @@
             disableToolStripMenuItem1 = new ToolStripMenuItem();
             reloadProcess = new System.Windows.Forms.Timer(components);
             countProcessesLbl = new Label();
+            checkBox1 = new CheckBox();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -299,11 +300,24 @@
             countProcessesLbl.TabIndex = 8;
             countProcessesLbl.Text = "Processes running: 0";
             // 
+            // checkBox1
+            // 
+            checkBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            checkBox1.AutoSize = true;
+            checkBox1.Location = new Point(776, 432);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(187, 19);
+            checkBox1.TabIndex = 9;
+            checkBox1.Text = "Load saved settings on Startup";
+            checkBox1.UseVisualStyleBackColor = true;
+            checkBox1.CheckedChanged += checkBox1_CheckedChanged;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(978, 456);
+            Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
             Controls.Add(searchProcessBtn);
             Controls.Add(searchProcessTxt);
@@ -353,5 +367,6 @@
         private ToolStripMenuItem disableToolStripMenuItem1;
         private System.Windows.Forms.Timer reloadProcess;
         private Label countProcessesLbl;
+        private CheckBox checkBox1;
     }
 }
