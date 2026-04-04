@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            systemMonitorPanel = new PLimit.Utils.SystemMonitorPanel();
             processesListBox = new DoubleBufferedListView();
             processName = new ColumnHeader();
             processId = new ColumnHeader();
@@ -74,13 +75,13 @@
             // 
             // processesListBox
             // 
-            processesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            processesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             processesListBox.Columns.AddRange(new ColumnHeader[] { processName, processId, priority, afinity, ioPriority, boost, efficiencyMode, storedSettings, userRunning });
             processesListBox.HideSelection = true;
             processesListBox.Location = new Point(12, 41);
             processesListBox.MultiSelect = false;
             processesListBox.Name = "processesListBox";
-            processesListBox.Size = new Size(1201, 388);
+            processesListBox.Size = new Size(1201, 306);
             processesListBox.Sorting = SortOrder.Ascending;
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
@@ -331,6 +332,14 @@
             deleteSavedSettingsToolStripMenuItem.Text = "Delete Saved Settings";
             deleteSavedSettingsToolStripMenuItem.Click += deleteSavedSettingsToolStripMenuItem_Click;
             // 
+            // systemMonitorPanel
+            // 
+            systemMonitorPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            systemMonitorPanel.Location = new Point(12, 352);
+            systemMonitorPanel.Name = "systemMonitorPanel";
+            systemMonitorPanel.Size = new Size(1201, 76);
+            systemMonitorPanel.TabIndex = 11;
+            // 
             // reloadProcess
             // 
             reloadProcess.Enabled = true;
@@ -381,11 +390,13 @@
             Controls.Add(searchProcessBtn);
             Controls.Add(searchProcessTxt);
             Controls.Add(refreshProcessListBtn);
+            Controls.Add(systemMonitorPanel);
             Controls.Add(processesListBox);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
             Load += MainForm_Load;
+            Resize += MainForm_Resize;
             MouseHover += MainForm_MouseHover;
             actionMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
@@ -434,5 +445,6 @@
         private ToolStripMenuItem killProcessToolStripMenuItem;
         private ColumnHeader userRunning;
         private CheckBox SaveSettingsCkb;
+        private PLimit.Utils.SystemMonitorPanel systemMonitorPanel;
     }
 }

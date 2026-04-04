@@ -30,6 +30,12 @@ namespace PLimit
             _backGroundWorker.RunWorkerAsync();
         }
 
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            // Keep the ListView filling all space between the toolbar and the monitor panel.
+            processesListBox.Height = systemMonitorPanel.Top - processesListBox.Top - 3;
+        }
+
 
         /// <summary>
         /// Background worker for load runing processes.
