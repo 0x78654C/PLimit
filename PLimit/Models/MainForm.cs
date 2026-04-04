@@ -388,7 +388,9 @@ namespace PLimit
                 {
                     CheckOnClick = true,
                     Checked = isSet,
-                    Tag = core // store core index
+                    Tag = core, // store core index
+                    BackColor = DarkTheme.Surface,
+                    ForeColor = DarkTheme.TextPrimary
                 };
 
                 coreItem.Click += CoreToolStripMenuItem_Click;
