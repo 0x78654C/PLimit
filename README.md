@@ -101,5 +101,6 @@ See [LICENSE.txt](LICENSE.txt) for details.
 
 ## Screenshot
 
-<img width="1220" height="659" alt="plimit" src="https://github.com/user-attachments/assets/105144c4-8105-4642-9ac1-9aa9cdf19dab" />
+<img width="1316" height="656" alt="plimit" src="https://github.com/user-attachments/assets/e80ef7cf-5f1a-4251-9c8f-a9ae34ad6a0b" />
+
 
