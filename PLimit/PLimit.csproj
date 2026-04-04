@@ -9,7 +9,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>AnyCPU;x64</Platforms>
     <PackageIcon>logo1.png</PackageIcon>
+    <ApplicationIcon>logo1.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="logo1.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\..\Downloads\logo1.png">

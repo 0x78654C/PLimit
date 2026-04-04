@@ -257,9 +257,12 @@ namespace PLimit.Utils
                         efficiencyMode = (process.PriorityClass.ToString() == "Idle" || process.PriorityClass.ToString() == "BelowNormal") ? "Enabled" : "Disabled";
                         // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
 
-                        var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-                        var storedSettin = settings.Any(s => s.ProcessName == process.ProcessName);
-
+                        var storedSetting = false;
+                        if(File.Exists(GlobalVars.LogFilePath))
+                        {
+                            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
+                            storedSetting = settings.Any(s => s.ProcessName == process.ProcessName);
+                        }
 
                         var item = new ListViewItem(new[]
                         {
@@ -270,7 +273,7 @@ namespace PLimit.Utils
                     io,
                     disabled.ToString(),
                     efficiencyMode,
-                    storedSettin ? "Yes" : "No",
+                    storedSetting ? "Yes" : "No",
                     user
                 });
 
