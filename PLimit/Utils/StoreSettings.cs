@@ -2,9 +2,6 @@
 {
     public class StoreSettings
     {
-        private string _logDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings");
-        private string _logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings", "processes.json");
-
         public StoreSettings() { }
 
         /// <summary>
@@ -19,10 +16,10 @@
         /// <exception cref="ArgumentOutOfRangeException">Thrown if settingType is not a valid value of the SettingType enumeration.</exception>
         public void UpdateSetting(SettingType settingType, string processName, string value)
         {
-            if (!Directory.Exists(_logDirPath))
-                Directory.CreateDirectory(_logDirPath);
+            if (!Directory.Exists(GlobalVars.LogDirPath))
+                Directory.CreateDirectory(GlobalVars.LogDirPath);
 
-            Json.JsonManage.UpdateJsonFileParameter<List<ProcessData>>(_logFilePath, data =>
+            Json.JsonManage.UpdateJsonFileParameter<List<ProcessData>>(GlobalVars.LogFilePath, data =>
             {
                 data ??= new List<ProcessData>();
 
@@ -75,7 +72,7 @@
         /// if the specified setting type is not recognized.</returns>
         public string? GetSetting(string processName, SettingType settingType)
         {
-            var data = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(_logFilePath);
+            var data = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath);
             var processData = data.FirstOrDefault(d => d.ProcessName == processName);
             if (processData == null) { return ""; }
             return settingType switch
@@ -97,7 +94,7 @@
         /// This operation is not reversible.</remarks>
         /// <param name="processName">The name of the process whose settings should be deleted. Cannot be null or empty.</param>
         public void DeleteSetting(string processName)
-           => Json.JsonManage.DeleteJsonData<ProcessData>(_logFilePath, data => data.Where(d => d.ProcessName == processName));
+           => Json.JsonManage.DeleteJsonData<ProcessData>(GlobalVars.LogFilePath, data => data.Where(d => d.ProcessName == processName));
 
         /// <summary>
         /// Specifies the types of process settings that can be configured or queried.

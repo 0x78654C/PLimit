@@ -46,6 +46,33 @@ namespace PLimit.Utils
 
         const int ThreadIoPriority = 22; // native THREADINFOCLASS value
         const uint THREAD_SET_INFORMATION = 0x0020;
+        const int TOKEN_ADJUST_PRIVILEGES = 0x0020;
+        const uint SE_PRIVILEGE_ENABLED = 0x00000002;
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern bool LookupPrivilegeValue(string? lpSystemName, string lpName, out LUID lpLuid);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern bool AdjustTokenPrivileges(
+            IntPtr TokenHandle,
+            bool DisableAllPrivileges,
+            ref TOKEN_PRIVILEGES NewState,
+            int BufferLength,
+            IntPtr PreviousState,
+            IntPtr ReturnLength);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LUID { public uint LowPart; public int HighPart; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LUID_AND_ATTRIBUTES { public LUID Luid; public uint Attributes; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct TOKEN_PRIVILEGES
+        {
+            public uint PrivilegeCount;
+            public LUID_AND_ATTRIBUTES Privileges;
+        }
 
         public enum IO_PRIORITY_HINT : int
         {
@@ -96,6 +123,10 @@ namespace PLimit.Utils
         /// <returns></returns>
         private static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
         {
+            // High and Critical IO priority require SeIncreaseBasePriorityPrivilege
+            if (priority >= IO_PRIORITY_HINT.High)
+                EnablePrivilege("SeIncreaseBasePriorityPrivilege");
+
             IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, t.Id);
             if (hThread == IntPtr.Zero)
                 return false;
@@ -113,6 +144,32 @@ namespace PLimit.Utils
             finally
             {
                 CloseHandle(hThread);
+            }
+        }
+
+        private static bool EnablePrivilege(string privilegeName)
+        {
+            if (!OpenProcessToken(Process.GetCurrentProcess().Handle,
+                (uint)(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), out IntPtr hToken))
+                return false;
+
+            try
+            {
+                if (!LookupPrivilegeValue(null, privilegeName, out LUID luid))
+                    return false;
+
+                var tp = new TOKEN_PRIVILEGES
+                {
+                    PrivilegeCount = 1,
+                    Privileges = new LUID_AND_ATTRIBUTES { Luid = luid, Attributes = SE_PRIVILEGE_ENABLED }
+                };
+
+                return AdjustTokenPrivileges(hToken, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)
+                       && Marshal.GetLastWin32Error() == 0;
+            }
+            finally
+            {
+                CloseHandle(hToken);
             }
         }
 
@@ -178,7 +235,7 @@ namespace PLimit.Utils
                 foreach (var process in processes)
                 {
                     var user = GetProcessUser(process);
-                    if (user != Environment.UserName) continue;
+                   // if (user != Environment.UserName) continue;
 
                     IntPtr handle = IntPtr.Zero;
                     try
@@ -197,8 +254,12 @@ namespace PLimit.Utils
                         var efficiencyMode = "Disable";
 
                         //Workaround for efficiency mode, since there is no official way to check if it's enabled or not, we will check if the priority class is set to Idle or BelowNormal, which are the only two options that enable efficiency mode
-                        efficiencyMode = (process.PriorityClass.ToString()=="Idle" || process.PriorityClass.ToString()=="BelowNormal") ? "Enabled" : "Disabled";
+                        efficiencyMode = (process.PriorityClass.ToString() == "Idle" || process.PriorityClass.ToString() == "BelowNormal") ? "Enabled" : "Disabled";
                         // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+
+                        var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
+                        var storedSettin = settings.Any(s => s.ProcessName == process.ProcessName);
+
 
                         var item = new ListViewItem(new[]
                         {
@@ -208,7 +269,9 @@ namespace PLimit.Utils
                     cpus.ToString(),
                     io,
                     disabled.ToString(),
-                    efficiencyMode
+                    efficiencyMode,
+                    storedSettin ? "Yes" : "No",
+                    user
                 });
 
                         listView.Items.Add(item);
@@ -335,6 +398,35 @@ namespace PLimit.Utils
                 value >>= 1;
             }
             return count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        /// <param name="pid"></param>
+        public void KillProcess(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        {
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var getProcess = Process.GetProcessById(int.Parse(processId));
+            try
+            {
+                getProcess.Kill();
+            }
+            catch
+            {
+                MessageBox.Show("Failed to kill process! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
         }
     }
 }

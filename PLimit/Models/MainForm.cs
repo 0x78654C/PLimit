@@ -501,10 +501,53 @@ namespace PLimit
                 reloadProcess.Start();
         }
 
+        /// <summary>
+        /// Handles the CheckedChanged event of checkBox1 by updating the application's loading settings preference.
+        /// </summary>
+        /// <remarks>This method synchronizes the value of the isLoadingSettings setting with the current
+        /// checked state of checkBox1 and saves the updated setting. This ensures that the user's preference is
+        /// persisted across application sessions.</remarks>
+        /// <param name="sender">The source of the event, typically the CheckBox control whose checked state has changed.</param>
+        /// <param name="e">An EventArgs object that contains the event data.</param>
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-              Properties.Settings.Default.isLoadingSettings = checkBox1.Checked;
-              Properties.Settings.Default.Save();
+            Properties.Settings.Default.isLoadingSettings = checkBox1.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Delete saved settings on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void deleteSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var deleteSettings = new DeleteSettings();
+            deleteSettings.DeleteSettingsApp(processesListBox.SelectedItems[0].SubItems[0].Text, GlobalVars.LogFilePath);
+        }
+
+        /// <summary>
+        /// Show saved settings on selected process event. This method is currently empty and can be implemented to display the saved settings for the selected process when the corresponding menu item is clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void showSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var readSettings = new ReadSettings();
+            readSettings.ShowSettings(processesListBox, countProcessesLbl, searchProcessTxt, this, GlobalVars.LogFilePath);
+        }
+
+        /// <summary>
+        /// Kill selected process event.
+        /// This method creates an instance of the ProcessesManage class and calls its KillProcess method, passing the current form, the processes list box, the label for counting processes, and the search process text box as parameters.
+        /// This allows the user to terminate the selected process from the context menu.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void killProcessToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processesManage = new ProcessesManage();
+            processesManage.KillProcess(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
     }
 }

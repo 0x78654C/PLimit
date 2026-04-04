@@ -37,6 +37,8 @@
             ioPriority = new ColumnHeader();
             boost = new ColumnHeader();
             efficiencyMode = new ColumnHeader();
+            storedSettings = new ColumnHeader();
+            userRunning = new ColumnHeader();
             searchProcessBtn = new Button();
             searchProcessTxt = new TextBox();
             refreshProcessListBtn = new Button();
@@ -59,6 +61,10 @@
             efficiencyModeToolStripMenuItem = new ToolStripMenuItem();
             enableToolStripMenuItem1 = new ToolStripMenuItem();
             disableToolStripMenuItem1 = new ToolStripMenuItem();
+            showSavedSettingsToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            killProcessToolStripMenuItem = new ToolStripMenuItem();
+            deleteSavedSettingsToolStripMenuItem = new ToolStripMenuItem();
             reloadProcess = new System.Windows.Forms.Timer(components);
             countProcessesLbl = new Label();
             checkBox1 = new CheckBox();
@@ -68,12 +74,12 @@
             // processesListBox
             // 
             processesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            processesListBox.Columns.AddRange(new ColumnHeader[] { processName, processId, priority, afinity, ioPriority, boost, efficiencyMode });
+            processesListBox.Columns.AddRange(new ColumnHeader[] { processName, processId, priority, afinity, ioPriority, boost, efficiencyMode, storedSettings, userRunning });
             processesListBox.HideSelection = true;
             processesListBox.Location = new Point(12, 41);
             processesListBox.MultiSelect = false;
             processesListBox.Name = "processesListBox";
-            processesListBox.Size = new Size(951, 388);
+            processesListBox.Size = new Size(1201, 388);
             processesListBox.Sorting = SortOrder.Ascending;
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
@@ -116,11 +122,23 @@
             efficiencyMode.Text = "Efficiency Mode";
             efficiencyMode.Width = 120;
             // 
+            // storedSettings
+            // 
+            storedSettings.Text = "Stored Settings";
+            storedSettings.TextAlign = HorizontalAlignment.Center;
+            storedSettings.Width = 120;
+            // 
+            // userRunning
+            // 
+            userRunning.Text = "User";
+            userRunning.TextAlign = HorizontalAlignment.Center;
+            userRunning.Width = 130;
+            // 
             // searchProcessBtn
             // 
             searchProcessBtn.Anchor = AnchorStyles.Top;
             searchProcessBtn.Enabled = false;
-            searchProcessBtn.Location = new Point(507, 12);
+            searchProcessBtn.Location = new Point(632, 12);
             searchProcessBtn.Name = "searchProcessBtn";
             searchProcessBtn.Size = new Size(75, 23);
             searchProcessBtn.TabIndex = 7;
@@ -132,7 +150,7 @@
             // searchProcessTxt
             // 
             searchProcessTxt.Anchor = AnchorStyles.Top;
-            searchProcessTxt.Location = new Point(268, 13);
+            searchProcessTxt.Location = new Point(393, 13);
             searchProcessTxt.Name = "searchProcessTxt";
             searchProcessTxt.Size = new Size(233, 23);
             searchProcessTxt.TabIndex = 6;
@@ -144,7 +162,7 @@
             // refreshProcessListBtn
             // 
             refreshProcessListBtn.Anchor = AnchorStyles.Top;
-            refreshProcessListBtn.Location = new Point(583, 12);
+            refreshProcessListBtn.Location = new Point(708, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
             refreshProcessListBtn.Size = new Size(94, 23);
             refreshProcessListBtn.TabIndex = 5;
@@ -155,15 +173,15 @@
             // 
             // actionMenuStrip
             // 
-            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem });
+            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem, showSavedSettingsToolStripMenuItem, toolStripSeparator2, killProcessToolStripMenuItem, deleteSavedSettingsToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(160, 114);
+            actionMenuStrip.Size = new Size(187, 186);
             // 
             // boostToolStripMenuItem
             // 
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
-            boostToolStripMenuItem.Size = new Size(159, 22);
+            boostToolStripMenuItem.Size = new Size(186, 22);
             boostToolStripMenuItem.Text = "Boost";
             // 
             // enableToolStripMenuItem
@@ -184,7 +202,7 @@
             // 
             iOPriorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { veryLowToolStripMenuItem, lowToolStripMenuItem, normalToolStripMenuItem, highToolStripMenuItem });
             iOPriorityToolStripMenuItem.Name = "iOPriorityToolStripMenuItem";
-            iOPriorityToolStripMenuItem.Size = new Size(159, 22);
+            iOPriorityToolStripMenuItem.Size = new Size(186, 22);
             iOPriorityToolStripMenuItem.Text = "I/O Priority";
             // 
             // veryLowToolStripMenuItem
@@ -219,7 +237,7 @@
             // 
             priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem });
             priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
-            priorityToolStripMenuItem.Size = new Size(159, 22);
+            priorityToolStripMenuItem.Size = new Size(186, 22);
             priorityToolStripMenuItem.Text = "Priority";
             // 
             // realTimedangerToolStripMenuItem
@@ -260,7 +278,7 @@
             // afinityToolStripMenuItem
             // 
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
-            afinityToolStripMenuItem.Size = new Size(159, 22);
+            afinityToolStripMenuItem.Size = new Size(186, 22);
             afinityToolStripMenuItem.Text = "Afinity";
             afinityToolStripMenuItem.MouseHover += afinityToolStripMenuItem_MouseHover;
             // 
@@ -268,7 +286,7 @@
             // 
             efficiencyModeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem1, disableToolStripMenuItem1 });
             efficiencyModeToolStripMenuItem.Name = "efficiencyModeToolStripMenuItem";
-            efficiencyModeToolStripMenuItem.Size = new Size(159, 22);
+            efficiencyModeToolStripMenuItem.Size = new Size(186, 22);
             efficiencyModeToolStripMenuItem.Text = "Efficiency Mode";
             // 
             // enableToolStripMenuItem1
@@ -284,6 +302,33 @@
             disableToolStripMenuItem1.Size = new Size(112, 22);
             disableToolStripMenuItem1.Text = "Disable";
             disableToolStripMenuItem1.Click += disableToolStripMenuItem1_Click;
+            // 
+            // showSavedSettingsToolStripMenuItem
+            // 
+            showSavedSettingsToolStripMenuItem.Name = "showSavedSettingsToolStripMenuItem";
+            showSavedSettingsToolStripMenuItem.Size = new Size(186, 22);
+            showSavedSettingsToolStripMenuItem.Text = "Show Saved Settings";
+            showSavedSettingsToolStripMenuItem.Click += showSavedSettingsToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(183, 6);
+            // 
+            // killProcessToolStripMenuItem
+            // 
+            killProcessToolStripMenuItem.Name = "killProcessToolStripMenuItem";
+            killProcessToolStripMenuItem.Size = new Size(186, 22);
+            killProcessToolStripMenuItem.Text = "Kill Process";
+            killProcessToolStripMenuItem.Click += killProcessToolStripMenuItem_Click;
+            // 
+            // deleteSavedSettingsToolStripMenuItem
+            // 
+            deleteSavedSettingsToolStripMenuItem.ForeColor = Color.Red;
+            deleteSavedSettingsToolStripMenuItem.Name = "deleteSavedSettingsToolStripMenuItem";
+            deleteSavedSettingsToolStripMenuItem.Size = new Size(186, 22);
+            deleteSavedSettingsToolStripMenuItem.Text = "Delete Saved Settings";
+            deleteSavedSettingsToolStripMenuItem.Click += deleteSavedSettingsToolStripMenuItem_Click;
             // 
             // reloadProcess
             // 
@@ -304,7 +349,7 @@
             // 
             checkBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(776, 432);
+            checkBox1.Location = new Point(1026, 432);
             checkBox1.Name = "checkBox1";
             checkBox1.Size = new Size(187, 19);
             checkBox1.TabIndex = 9;
@@ -316,7 +361,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(978, 456);
+            ClientSize = new Size(1228, 456);
             Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
             Controls.Add(searchProcessBtn);
@@ -368,5 +413,11 @@
         private System.Windows.Forms.Timer reloadProcess;
         private Label countProcessesLbl;
         private CheckBox checkBox1;
+        private ColumnHeader storedSettings;
+        private ToolStripMenuItem deleteSavedSettingsToolStripMenuItem;
+        private ToolStripMenuItem showSavedSettingsToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem killProcessToolStripMenuItem;
+        private ColumnHeader userRunning;
     }
 }

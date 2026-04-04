@@ -1,4 +1,6 @@
-﻿namespace PLimit.Utils
+﻿using System.Diagnostics;
+
+namespace PLimit.Utils
 {
     public class Utils
     {
