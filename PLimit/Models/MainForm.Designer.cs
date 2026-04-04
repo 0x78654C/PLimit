@@ -73,15 +73,26 @@
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
+            // systemMonitorPanel
+            // 
+            systemMonitorPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            systemMonitorPanel.BackColor = Color.FromArgb(22, 22, 22);
+            systemMonitorPanel.Location = new Point(12, 527);
+            systemMonitorPanel.Name = "systemMonitorPanel";
+            systemMonitorPanel.Size = new Size(1201, 76);
+            systemMonitorPanel.TabIndex = 11;
+            // 
             // processesListBox
             // 
             processesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             processesListBox.Columns.AddRange(new ColumnHeader[] { processName, processId, priority, afinity, ioPriority, boost, efficiencyMode, storedSettings, userRunning });
+            processesListBox.FullRowSelect = true;
             processesListBox.HideSelection = true;
             processesListBox.Location = new Point(12, 41);
             processesListBox.MultiSelect = false;
             processesListBox.Name = "processesListBox";
-            processesListBox.Size = new Size(1201, 306);
+            processesListBox.OwnerDraw = true;
+            processesListBox.Size = new Size(1201, 480);
             processesListBox.Sorting = SortOrder.Ascending;
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
@@ -166,7 +177,7 @@
             refreshProcessListBtn.Anchor = AnchorStyles.Top;
             refreshProcessListBtn.Location = new Point(708, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
-            refreshProcessListBtn.Size = new Size(94, 23);
+            refreshProcessListBtn.Size = new Size(102, 23);
             refreshProcessListBtn.TabIndex = 5;
             refreshProcessListBtn.Text = "Refresh List (R)";
             refreshProcessListBtn.UseVisualStyleBackColor = true;
@@ -332,14 +343,6 @@
             deleteSavedSettingsToolStripMenuItem.Text = "Delete Saved Settings";
             deleteSavedSettingsToolStripMenuItem.Click += deleteSavedSettingsToolStripMenuItem_Click;
             // 
-            // systemMonitorPanel
-            // 
-            systemMonitorPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            systemMonitorPanel.Location = new Point(12, 352);
-            systemMonitorPanel.Name = "systemMonitorPanel";
-            systemMonitorPanel.Size = new Size(1201, 76);
-            systemMonitorPanel.TabIndex = 11;
-            // 
             // reloadProcess
             // 
             reloadProcess.Enabled = true;
@@ -349,7 +352,7 @@
             // countProcessesLbl
             // 
             countProcessesLbl.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            countProcessesLbl.Location = new Point(9, 432);
+            countProcessesLbl.Location = new Point(9, 607);
             countProcessesLbl.Name = "countProcessesLbl";
             countProcessesLbl.Size = new Size(194, 15);
             countProcessesLbl.TabIndex = 8;
@@ -359,7 +362,7 @@
             // 
             checkBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(1026, 432);
+            checkBox1.Location = new Point(1026, 607);
             checkBox1.Name = "checkBox1";
             checkBox1.Size = new Size(187, 19);
             checkBox1.TabIndex = 9;
@@ -371,7 +374,7 @@
             // 
             SaveSettingsCkb.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             SaveSettingsCkb.AutoSize = true;
-            SaveSettingsCkb.Location = new Point(909, 432);
+            SaveSettingsCkb.Location = new Point(909, 607);
             SaveSettingsCkb.Name = "SaveSettingsCkb";
             SaveSettingsCkb.Size = new Size(97, 19);
             SaveSettingsCkb.TabIndex = 10;
@@ -383,7 +386,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1228, 456);
+            ClientSize = new Size(1228, 631);
             Controls.Add(SaveSettingsCkb);
             Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
@@ -392,12 +395,14 @@
             Controls.Add(refreshProcessListBtn);
             Controls.Add(systemMonitorPanel);
             Controls.Add(processesListBox);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
             Load += MainForm_Load;
-            Resize += MainForm_Resize;
             MouseHover += MainForm_MouseHover;
+            Resize += MainForm_Resize;
             actionMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();

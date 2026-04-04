@@ -25,6 +25,9 @@ namespace PLimit
         {
             checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
             SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
+
+            DarkTheme.Apply(this, actionMenuStrip);
+
             _backGroundWorker = new BackgroundWorker();
             _backGroundWorker.DoWork += _backGroundWorker_DoWork;
             _backGroundWorker.RunWorkerAsync();
