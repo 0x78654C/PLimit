@@ -199,6 +199,38 @@
         }
 
         /// <summary>
+        /// Read the settings from the specified file path and apply the Wdptb settings to the processes in the list box.
+        /// </summary>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        /// <param name="from"></param>
+        public void ReadWdptbSettings(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        {
+            if (!Directory.Exists(GlobalVars.LogDirPath))
+                return;
+            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
+            if (settings == null)
+                return;
+            foreach (var setting in settings)
+            {
+                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
+                {
+                    if (item.SubItems[0].Text == setting.ProcessName)
+                    {
+                        if (string.IsNullOrEmpty(setting.Wdptb))
+                            continue;
+                        var wdptb = new PriorityProcess();
+                        if (setting.Wdptb == "Enabled")
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text);
+                        else
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Show the settings of the selected process in the list box by reading the settings from the specified file path and displaying them in a message box.
         /// </summary>
         /// <param name="processesListBox"></param>

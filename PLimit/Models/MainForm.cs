@@ -57,6 +57,10 @@ namespace PLimit
             });
         }
 
+        /// <summary>
+        /// Load settings method. This method checks if the isLoadingSettings setting is enabled, and if so, it creates an instance of the ReadSettings class and calls its methods to read and apply the saved settings for boost, efficiency, affinity, priority, IO priority, and Wdptb (Windows Defender Process Threat Detection) for the processes displayed in the processesListBox. 
+        /// The settings are applied to the processes list box, the count of processes label, and the search process text box in the main form.
+        /// </summary>
         private void LoadSettins()
         {
             if (Properties.Settings.Default.isLoadingSettings)
@@ -67,6 +71,7 @@ namespace PLimit
                 readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
                 readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
                 readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this);
             }
         }
 
