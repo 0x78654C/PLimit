@@ -5,7 +5,7 @@
 <h1 align="center">PLimit — Process Limiter</h1>
 
 <p align="center">
-  A lightweight Windows utility to manage and fine-tune running process priorities, CPU affinity, I/O priority, CPU boost, and efficiency mode — all from a clean dark-themed UI.
+  A lightweight Windows utility to manage and fine-tune running process priorities, CPU affinity, I/O priority, CPU boost, thread priority boost, and efficiency mode — all from a clean dark-themed UI.
 </p>
 
 ---
@@ -58,6 +58,17 @@ Restrict a process to specific CPU cores via the right-click context menu. At le
 
 ### 🚀 CPU Boost
 Enable or disable dynamic CPU frequency boost for a selected process.
+
+### 🧵 Thread Priority Boost
+Read and control the **dynamic thread priority boost** for a selected process.
+
+When enabled (Windows default), the kernel temporarily raises a thread's base priority after it wakes from a wait (e.g. after I/O or a UI event) to improve responsiveness. Disabling it keeps all threads pinned to their base priority — useful for latency-sensitive workloads or real-time scenarios where predictable scheduling matters more than burst responsiveness.
+
+| Action | Description |
+|---|---|
+| **Read** | Returns `true` if boost is active, `false` if disabled, or `null` if the status cannot be queried (access denied) |
+| **Enable** | Restores the default Windows behaviour — threads receive a temporary priority boost after waiting |
+| **Disable** | Prevents any dynamic boost — threads always run at their assigned base priority |
 
 ### 🌿 Efficiency Mode
 Toggle Windows **EcoQoS** (Efficiency Mode) on or off for a process. Efficiency Mode reduces CPU and power usage — ideal for background apps.
