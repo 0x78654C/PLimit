@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             systemMonitorPanel = new PLimit.Utils.SystemMonitorPanel();
             processesListBox = new DoubleBufferedListView();
             processName = new ColumnHeader();
@@ -396,6 +397,7 @@
             Controls.Add(systemMonitorPanel);
             Controls.Add(processesListBox);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
