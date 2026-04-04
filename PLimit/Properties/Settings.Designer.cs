@@ -34,5 +34,17 @@ namespace PLimit.Properties {
                 this["isLoadingSettings"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool isSaveingSettings {
+            get {
+                return ((bool)(this["isSaveingSettings"]));
+            }
+            set {
+                this["isSaveingSettings"] = value;
+            }
+        }
     }
 }

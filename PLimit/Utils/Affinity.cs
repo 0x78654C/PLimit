@@ -74,8 +74,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(mask))
             {
-                var storeAffinity = new StoreSettings(); ;
-                storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeAffinity = new StoreSettings(); ;
+                    storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
+                }
             }
         }
     }

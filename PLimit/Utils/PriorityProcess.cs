@@ -29,8 +29,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingPriority = new StoreSettings();
-                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingPriority = new StoreSettings();
+                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+                }
             }
         }
 
@@ -56,8 +59,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingPriority = new StoreSettings();
-                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingPriority = new StoreSettings();
+                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
+                }
             }
         }
 
@@ -81,8 +87,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingPriority = new StoreSettings();
-                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingPriority = new StoreSettings();
+                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
+                }
             }
         }
 
@@ -108,8 +117,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingPriority = new StoreSettings();
-                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingPriority = new StoreSettings();
+                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+                }
             }
         }
 
@@ -136,8 +148,11 @@ namespace PLimit.Utils
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingPriority = new StoreSettings();
-                settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingPriority = new StoreSettings();
+                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
+                }
             }
         }
     }

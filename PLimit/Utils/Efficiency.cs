@@ -26,8 +26,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var storeEfficiency = new StoreSettings();
-                storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "True");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeEfficiency = new StoreSettings();
+                    storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "True");
+                }
             }
         }
 
@@ -53,8 +56,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var storeEfficiency = new StoreSettings();
-                storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "False");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeEfficiency = new StoreSettings();
+                    storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "False");
+                }
             }
         }
     }

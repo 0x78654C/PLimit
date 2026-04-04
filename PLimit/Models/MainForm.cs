@@ -24,6 +24,7 @@ namespace PLimit
         private void MainForm_Load(object sender, EventArgs e)
         {
             checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
+            SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
             _backGroundWorker = new BackgroundWorker();
             _backGroundWorker.DoWork += _backGroundWorker_DoWork;
             _backGroundWorker.RunWorkerAsync();
@@ -523,7 +524,7 @@ namespace PLimit
         private void deleteSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var deleteSettings = new DeleteSettings();
-            deleteSettings.DeleteSettingsApp(processesListBox.SelectedItems[0].SubItems[0].Text, GlobalVars.LogFilePath);
+            deleteSettings.DeleteSettingsApp(this, processesListBox, countProcessesLbl, searchProcessTxt, GlobalVars.LogFilePath);
         }
 
         /// <summary>
@@ -548,6 +549,12 @@ namespace PLimit
         {
             var processesManage = new ProcessesManage();
             processesManage.KillProcess(this, processesListBox, countProcessesLbl, searchProcessTxt);
+        }
+
+        private void SaveSettingsCkb_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.isSaveingSettings = SaveSettingsCkb.Checked;
+            Properties.Settings.Default.Save();
         }
     }
 }

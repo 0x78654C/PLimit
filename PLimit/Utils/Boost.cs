@@ -25,8 +25,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var storeBoost = new StoreSettings();
-                storeBoost.UpdateSetting(StoreSettings.SettingType.Boosted, processesListBox.SelectedItems[0].SubItems[0].Text, isEnable ? "True" : "False");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeBoost = new StoreSettings();
+                    storeBoost.UpdateSetting(StoreSettings.SettingType.Boosted, processesListBox.SelectedItems[0].SubItems[0].Text, isEnable ? "True" : "False");
+                }
             }
         }
     }

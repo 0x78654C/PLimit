@@ -24,8 +24,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingIO = new StoreSettings();
-                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingIO = new StoreSettings();
+                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
+                }
             }
         }
 
@@ -49,8 +52,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingIO = new StoreSettings();
-                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingIO = new StoreSettings();
+                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
+                }
             }
         }
 
@@ -74,8 +80,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingIO = new StoreSettings();
-                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingIO = new StoreSettings();
+                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
+                }
             }
         }
 
@@ -99,8 +108,11 @@
             }));
             if (string.IsNullOrEmpty(pid))
             {
-                var settingIO = new StoreSettings();
-                settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingIO = new StoreSettings();
+                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
+                }
             }
         }
     }

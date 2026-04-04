@@ -68,6 +68,7 @@
             reloadProcess = new System.Windows.Forms.Timer(components);
             countProcessesLbl = new Label();
             checkBox1 = new CheckBox();
+            SaveSettingsCkb = new CheckBox();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -357,11 +358,24 @@
             checkBox1.UseVisualStyleBackColor = true;
             checkBox1.CheckedChanged += checkBox1_CheckedChanged;
             // 
+            // SaveSettingsCkb
+            // 
+            SaveSettingsCkb.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            SaveSettingsCkb.AutoSize = true;
+            SaveSettingsCkb.Location = new Point(909, 432);
+            SaveSettingsCkb.Name = "SaveSettingsCkb";
+            SaveSettingsCkb.Size = new Size(97, 19);
+            SaveSettingsCkb.TabIndex = 10;
+            SaveSettingsCkb.Text = "Save settings ";
+            SaveSettingsCkb.UseVisualStyleBackColor = true;
+            SaveSettingsCkb.CheckedChanged += SaveSettingsCkb_CheckedChanged;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1228, 456);
+            Controls.Add(SaveSettingsCkb);
             Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
             Controls.Add(searchProcessBtn);
@@ -419,5 +433,6 @@
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem killProcessToolStripMenuItem;
         private ColumnHeader userRunning;
+        private CheckBox SaveSettingsCkb;
     }
 }
