@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo1.png" alt="PLimit Logo" width="160"/>
+  <img src="logo1.png" alt="PLimit Logo" width="560"/>
 </p>
 
 <h1 align="center">PLimit — Process Limiter</h1>
