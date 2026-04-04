@@ -24,6 +24,12 @@ namespace PLimit.Utils
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool SetProcessPriorityBoost(IntPtr hProcess, bool DisablePriorityBoost);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool GetThreadPriorityBoost(IntPtr hThread, out bool pDisablePriorityBoost);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetThreadPriorityBoost(IntPtr hThread, bool bDisablePriorityBoost);
+
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
 
@@ -257,6 +263,8 @@ namespace PLimit.Utils
                         efficiencyMode = (process.PriorityClass.ToString() == "Idle" || process.PriorityClass.ToString() == "BelowNormal") ? "Enabled" : "Disabled";
                         // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
 
+                        var dptb = GetThreadBoost(process.Id);
+
                         var storedSetting = false;
                         if(File.Exists(GlobalVars.LogFilePath))
                         {
@@ -274,6 +282,7 @@ namespace PLimit.Utils
                     disabled.ToString(),
                     efficiencyMode,
                     storedSetting ? "Yes" : "No",
+                    dptb.HasValue ? (dptb.Value ? "Enabled" : "Disabled") : "Unknown",
                     user
                 });
 
@@ -326,6 +335,68 @@ namespace PLimit.Utils
             catch
             {
                 MessageBox.Show("Failed to set priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Gets the dynamic thread priority boost status for the first accessible thread of a process.
+        /// Returns true if boost is enabled, false if disabled, null on error.
+        /// </summary>
+        /// <param name="processId"></param>
+        public bool? GetThreadBoost(int processId)
+        {
+            try
+            {
+                var process = Process.GetProcessById(processId);
+                foreach (ProcessThread thread in process.Threads)
+                {
+                    IntPtr hThread = OpenThread(0x0800 /* THREAD_QUERY_LIMITED_INFORMATION */, false, thread.Id);
+                    if (hThread == IntPtr.Zero) continue;
+                    try
+                    {
+                        if (GetThreadPriorityBoost(hThread, out bool disabled))
+                            return !disabled;
+                    }
+                    finally
+                    {
+                        CloseHandle(hThread);
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Enables or disables the dynamic thread priority boost for all threads of a process.
+        /// </summary>
+        /// <param name="enable"></param>
+        /// <param name="processId"></param>
+        public void SetThreadBoost(bool enable, int processId)
+        {
+            try
+            {
+                var process = Process.GetProcessById(processId);
+                foreach (ProcessThread thread in process.Threads)
+                {
+                    IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, thread.Id);
+                    if (hThread == IntPtr.Zero) continue;
+                    try
+                    {
+                        SetThreadPriorityBoost(hThread, !enable);
+                    }
+                    finally
+                    {
+                        CloseHandle(hThread);
+                    }
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Failed to set thread priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

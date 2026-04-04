@@ -57,6 +57,10 @@
                         processData.Efficiency = value;
                         break;
 
+                    case SettingType.Wdptb:
+                        processData.Wdptb = value;
+                        break;
+
                     default:
                         throw new ArgumentOutOfRangeException(nameof(settingType), settingType, null);
                 }
@@ -109,7 +113,8 @@
             IOPriority,
             Priority,
             Affinity,
-            Efficiency
+            Efficiency,
+            Wdptb
         }
 
     }

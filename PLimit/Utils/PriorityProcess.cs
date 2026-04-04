@@ -155,5 +155,47 @@ namespace PLimit.Utils
                 }
             }
         }
+        /// <summary>
+        /// Reads the dynamic thread priority boost status for the selected process.
+        /// Returns true if boost is enabled, false if disabled, null if the status could not be read (e.g. access denied).
+        /// </summary>
+        /// <param name="processId"></param>
+        public bool? GetThreadPriorityBoost(int processId)
+        {
+            var manage = new ProcessesManage();
+            return manage.GetThreadBoost(processId);
+        }
+
+        /// <summary>
+        /// Enables or disables the dynamic thread priority boost for all threads of the selected process.
+        /// When enabled, Windows temporarily raises a thread's priority after it wakes from a wait (the default OS behavior).
+        /// When disabled, threads run at their base priority without any dynamic boost.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        /// <param name="enable">true to enable boost, false to disable it.</param>
+        /// <param name="pid"></param>
+        public void SetThreadPriorityBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool enable, string pid = "")
+        {
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var manage = new ProcessesManage();
+            manage.SetThreadBoost(enable, int.Parse(processId));
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
+            if (string.IsNullOrEmpty(pid))
+            {
+                if (Properties.Settings.Default.isSaveingSettings)
+                {
+                    var settingIO = new StoreSettings();
+                    settingIO.UpdateSetting(StoreSettings.SettingType.Wdptb, processesListBox.SelectedItems[0].SubItems[0].Text, enable ? "Enabled" : "Disabled");
+                }
+            }
+        }
     }
 }

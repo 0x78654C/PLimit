@@ -562,10 +562,40 @@ namespace PLimit
             processesManage.KillProcess(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
+        /// <summary>
+        /// Save settings on selected process event. This method updates the isSaveingSettings setting based on the checked state of the SaveSettingsCkb CheckBox control and saves the updated setting. 
+        /// This allows the user to enable or disable the saving of settings for processes, and ensures that their preference is persisted across application sessions.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SaveSettingsCkb_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.isSaveingSettings = SaveSettingsCkb.Checked;
             Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Eable or disable priority boost on selected process event. 
+        /// This method creates an instance of the PriorityProcess class and calls its SetThreadPriorityBoost method, passing the current form, the processes list box, the label for counting processes, the search process text box, and a boolean value indicating whether to enable or disable the priority boost as parameters.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void enableToolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            var prirityBoost = new PriorityProcess();
+            prirityBoost.SetThreadPriorityBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, true);
+        }
+
+        /// <summary>
+        /// Disable priority boost on selected process event. 
+        /// This method creates an instance of the PriorityProcess class and calls its SetThreadPriorityBoost method, passing the current form, the processes list box, the label for counting processes, the search process text box, and a boolean value indicating that the priority boost should be disabled as parameters.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void disableToolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            var prirityBoost = new PriorityProcess();
+            prirityBoost.SetThreadPriorityBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, false);
         }
     }
 }

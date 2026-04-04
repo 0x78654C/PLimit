@@ -9,6 +9,7 @@
         public string Property { get; set; }
         public string Affinity { get; set; }
         public string Efficiency { get; set; }
+        public string Wdptb { get; set; }
         public override bool Equals(object obj)
         {
             return obj is ProcessData details &&
@@ -17,7 +18,8 @@
                    IOProperty == details.IOProperty &&
                    Property == details.Property &&
                    Affinity == details.Affinity &&
-                   Efficiency == details.Efficiency;
+                   Efficiency == details.Efficiency &&
+                   Wdptb == details.Wdptb;
         }
 
         public override int GetHashCode()
@@ -29,6 +31,7 @@
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Property);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Affinity);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Efficiency);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Wdptb);
             return hashCode;
         }
     }
