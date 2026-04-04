@@ -1,5 +1,4 @@
-﻿
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
@@ -28,8 +27,54 @@ namespace PLimit.Utils
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
 
+        // native NTSTATUS version
+        [DllImport("ntdll.dll")]
+        private static extern int NtQueryInformationThread(
+            IntPtr ThreadHandle,
+            int ThreadInformationClass,
+            out int ThreadInformation,
+            int ThreadInformationLength,
+            out int ReturnLength);
 
-        public enum IO_PRIORITY_HINT
+        [DllImport("ntdll.dll")]
+        static extern int NtSetInformationThread(
+            IntPtr ThreadHandle,
+            int ThreadInformationClass,
+            ref IO_PRIORITY_HINT ThreadInformation,
+            int ThreadInformationLength
+        );
+
+        const int ThreadIoPriority = 22; // native THREADINFOCLASS value
+        const uint THREAD_SET_INFORMATION = 0x0020;
+        const int TOKEN_ADJUST_PRIVILEGES = 0x0020;
+        const uint SE_PRIVILEGE_ENABLED = 0x00000002;
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern bool LookupPrivilegeValue(string? lpSystemName, string lpName, out LUID lpLuid);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern bool AdjustTokenPrivileges(
+            IntPtr TokenHandle,
+            bool DisableAllPrivileges,
+            ref TOKEN_PRIVILEGES NewState,
+            int BufferLength,
+            IntPtr PreviousState,
+            IntPtr ReturnLength);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LUID { public uint LowPart; public int HighPart; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct LUID_AND_ATTRIBUTES { public LUID Luid; public uint Attributes; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct TOKEN_PRIVILEGES
+        {
+            public uint PrivilegeCount;
+            public LUID_AND_ATTRIBUTES Privileges;
+        }
+
+        public enum IO_PRIORITY_HINT : int
         {
             VeryLow = 0,
             Low = 1,
@@ -78,22 +123,54 @@ namespace PLimit.Utils
         /// <returns></returns>
         private static bool SetIoPriority(ProcessThread t, IO_PRIORITY_HINT priority)
         {
-            // const uint THREAD_SET_INFORMATION = 0x0020;
-            // const uint THREAD_QUERY_INFORMATION = 0x0040;
-            const uint THREAD_ALL_ACCESS = 0x1F03FF;
-            IntPtr hThread = OpenThread(THREAD_ALL_ACCESS, false, t.Id);
+            // High and Critical IO priority require SeIncreaseBasePriorityPrivilege
+            if (priority >= IO_PRIORITY_HINT.High)
+                EnablePrivilege("SeIncreaseBasePriorityPrivilege");
 
+            IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, t.Id);
             if (hThread == IntPtr.Zero)
                 return false;
 
-            bool ok = SetThreadInformation(
-                hThread,
-                THREAD_INFORMATION_CLASS.ThreadIoPriority,
-                ref priority,
-                sizeof(int));
+            try
+            {
+                int status = NtSetInformationThread(
+                    hThread,
+                    ThreadIoPriority,
+                    ref priority,
+                    sizeof(IO_PRIORITY_HINT));
 
-            CloseHandle(hThread);
-            return ok;
+                return status == 0;
+            }
+            finally
+            {
+                CloseHandle(hThread);
+            }
+        }
+
+        private static bool EnablePrivilege(string privilegeName)
+        {
+            if (!OpenProcessToken(Process.GetCurrentProcess().Handle,
+                (uint)(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), out IntPtr hToken))
+                return false;
+
+            try
+            {
+                if (!LookupPrivilegeValue(null, privilegeName, out LUID luid))
+                    return false;
+
+                var tp = new TOKEN_PRIVILEGES
+                {
+                    PrivilegeCount = 1,
+                    Privileges = new LUID_AND_ATTRIBUTES { Luid = luid, Attributes = SE_PRIVILEGE_ENABLED }
+                };
+
+                return AdjustTokenPrivileges(hToken, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)
+                       && Marshal.GetLastWin32Error() == 0;
+            }
+            finally
+            {
+                CloseHandle(hToken);
+            }
         }
 
         /// <summary>
@@ -113,24 +190,36 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static IO_PRIORITY_HINT GetIoPriority(ProcessThread t)
+        public static IO_PRIORITY_HINT? GetIoPriority(ProcessThread t)
         {
-            IntPtr hThread = OpenThread(0x0040 /* QUERY_LIMITED_INFORMATION */, false, t.Id);
-
+            IntPtr hThread = OpenThread(0x0800, false, t.Id); // THREAD_QUERY_LIMITED_INFORMATION
             if (hThread == IntPtr.Zero)
-                return IO_PRIORITY_HINT.Normal;
+                return null;
 
-            IO_PRIORITY_HINT hint;
-            GetThreadInformation(hThread,
-                                 THREAD_INFORMATION_CLASS.ThreadIoPriority,
-                                 out hint,
-                                 sizeof(int));
+            try
+            {
+                int returnLength;
+                int rawValue;
 
-            CloseHandle(hThread);
-            return hint;
+                int status = NtQueryInformationThread(
+                    hThread,
+                    22, // ThreadIoPriority
+                    out rawValue,
+                    sizeof(int),
+                    out returnLength);
+
+                if (status != 0)
+                    return null;
+
+                return Enum.IsDefined(typeof(IO_PRIORITY_HINT), rawValue)
+                    ? (IO_PRIORITY_HINT)rawValue
+                    : null;
+            }
+            finally
+            {
+                CloseHandle(hThread);
+            }
         }
-
-
         /// <summary>
         /// Add running processes to list box.
         /// </summary>
@@ -146,7 +235,7 @@ namespace PLimit.Utils
                 foreach (var process in processes)
                 {
                     var user = GetProcessUser(process);
-                    if (user != Environment.UserName) continue;
+                   // if (user != Environment.UserName) continue;
 
                     IntPtr handle = IntPtr.Zero;
                     try
@@ -158,11 +247,19 @@ namespace PLimit.Utils
 
                         var cpus = CountBits(process.ProcessorAffinity.ToInt64());
 
-                        var io = "";
+                        var io = "----";
                         foreach (ProcessThread thread in process.Threads)
                             io = GetIoPriority(thread).ToString();
+                        var efficency = new EfficiencyModeHelper();
+                        var efficiencyMode = "Disable";
 
-                        var efficiencyMode = EfficiencyModeHelper.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+                        //Workaround for efficiency mode, since there is no official way to check if it's enabled or not, we will check if the priority class is set to Idle or BelowNormal, which are the only two options that enable efficiency mode
+                        efficiencyMode = (process.PriorityClass.ToString() == "Idle" || process.PriorityClass.ToString() == "BelowNormal") ? "Enabled" : "Disabled";
+                        // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
+
+                        var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
+                        var storedSettin = settings.Any(s => s.ProcessName == process.ProcessName);
+
 
                         var item = new ListViewItem(new[]
                         {
@@ -172,7 +269,9 @@ namespace PLimit.Utils
                     cpus.ToString(),
                     io,
                     disabled.ToString(),
-                    efficiencyMode
+                    efficiencyMode,
+                    storedSettin ? "Yes" : "No",
+                    user
                 });
 
                         listView.Items.Add(item);
@@ -299,6 +398,35 @@ namespace PLimit.Utils
                 value >>= 1;
             }
             return count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="processesListBox"></param>
+        /// <param name="label"></param>
+        /// <param name="searchBox"></param>
+        /// <param name="pid"></param>
+        public void KillProcess(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        {
+            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var getProcess = Process.GetProcessById(int.Parse(processId));
+            try
+            {
+                getProcess.Kill();
+            }
+            catch
+            {
+                MessageBox.Show("Failed to kill process! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            from.BeginInvoke(new Action(() =>
+            {
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
         }
     }
 }

@@ -23,9 +23,20 @@ namespace PLimit
         /// <param name="e"></param>
         private void MainForm_Load(object sender, EventArgs e)
         {
+            checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
+            SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
+
+            DarkTheme.Apply(this, actionMenuStrip);
+
             _backGroundWorker = new BackgroundWorker();
             _backGroundWorker.DoWork += _backGroundWorker_DoWork;
             _backGroundWorker.RunWorkerAsync();
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            // Keep the ListView filling all space between the toolbar and the monitor panel.
+            processesListBox.Height = systemMonitorPanel.Top - processesListBox.Top - 3;
         }
 
 
@@ -42,7 +53,21 @@ namespace PLimit
                 getProcesses.GetProcesses(ref processesListBox);
                 searchProcessTxt.SetWatermark("Enter process name or PID...");
                 countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
+                LoadSettins();
             });
+        }
+
+        private void LoadSettins()
+        {
+            if (Properties.Settings.Default.isLoadingSettings)
+            {
+                var readSettings = new ReadSettings();
+                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
+            }
         }
 
         /// <summary>
@@ -129,7 +154,7 @@ namespace PLimit
 
         private void SearchProcess(bool isMessage = true)
         {
-            if(searchProcessTxt.Text.Length == 0)
+            if (searchProcessTxt.Text.Length == 0)
                 return;
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
@@ -180,16 +205,10 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void enableToolStripMenuItem_Click(object sender, EventArgs e)
+        public void enableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setBoost = new ProcessesManage();
-            setBoost.SetBoost(true, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var boost = new Boost();
+            boost.SetBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, true);
         }
 
         /// <summary>
@@ -199,14 +218,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void disableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setBoost = new ProcessesManage();
-            setBoost.SetBoost(false, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var boost = new Boost();
+            boost.SetBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, false);
         }
 
         #endregion
@@ -219,14 +232,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void veryLowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setIoPriority = new ProcessesManage();
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var ioPriority = new IOPriority();
+            ioPriority.IOVeryLowPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -236,14 +243,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void lowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setIoPriority = new ProcessesManage();
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var ioPriority = new IOPriority();
+            ioPriority.IOLowPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -253,14 +254,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void normalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setIoPriority = new ProcessesManage();
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var ioPriority = new IOPriority();
+            ioPriority.IONormalPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
 
@@ -271,14 +266,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void highToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setIoPriority = new ProcessesManage();
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var ioPriority = new IOPriority();
+            ioPriority.IOHighPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
         #endregion
 
@@ -292,14 +281,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void highToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setPriority = new ProcessesManage();
-            setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var processPriorty = new PriorityProcess();
+            processPriorty.HighPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -309,14 +292,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void realTimedangerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setPriority = new ProcessesManage();
-            setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var processPriorty = new PriorityProcess();
+            processPriorty.RealTimePriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -326,14 +303,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void aboveNormalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setPriority = new ProcessesManage();
-            setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var processPriorty = new PriorityProcess();
+            processPriorty.AboveNormalPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -343,14 +314,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void normalToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setPriority = new ProcessesManage();
-            setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var processPriorty = new PriorityProcess();
+            processPriorty.NormalPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
         /// <summary>
@@ -360,14 +325,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void belowNormalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setPriority = new ProcessesManage();
-            setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var processPriorty = new PriorityProcess();
+            processPriorty.BelowNormalPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
         #endregion
 
@@ -380,14 +339,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void enableToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setEfficiencyMode = new EfficiencyModeHelper();
-            setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var efficiency = new Efficiency();
+            efficiency.EnableEfficiency(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
 
 
@@ -398,14 +351,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void disableToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            var processId = processesListBox.SelectedItems[0].SubItems[1].Text;
-            var setEfficiencyMode = new EfficiencyModeHelper();
-            setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var efficiency = new Efficiency();
+            efficiency.DisableEfficiency(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
         #endregion
 
@@ -456,43 +403,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void CoreToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (afinityToolStripMenuItem.Tag is not int pid)
-                return;
-
-            Process p;
-            try { p = Process.GetProcessById(pid); }
-            catch { return; }
-
-            long newMask = 0;
-
-            foreach (ToolStripItem tsi in afinityToolStripMenuItem.DropDownItems)
-            {
-                if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
-                    newMask |= (1L << core);
-            }
-
-            // must keep at least 1 core enabled
-            if (newMask == 0)
-            {
-                if (sender is ToolStripMenuItem clicked)
-                    clicked.Checked = true;
-                return;
-            }
-
-            try
-            {
-                p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
-            }
-            catch
-            {
-                // access denied / process exited / 32-bit limitations / etc.
-                // Optional: MessageBox.Show("Couldn't change affinity.");
-            }
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess();
-            }));
+            var affinity = new Affinity();
+            affinity.SetAffinity(this, processesListBox, afinityToolStripMenuItem, countProcessesLbl, searchProcessTxt, sender);
         }
 
         /// <summary>
@@ -597,6 +509,61 @@ namespace PLimit
         {
             if (!reloadProcess.Enabled)
                 reloadProcess.Start();
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of checkBox1 by updating the application's loading settings preference.
+        /// </summary>
+        /// <remarks>This method synchronizes the value of the isLoadingSettings setting with the current
+        /// checked state of checkBox1 and saves the updated setting. This ensures that the user's preference is
+        /// persisted across application sessions.</remarks>
+        /// <param name="sender">The source of the event, typically the CheckBox control whose checked state has changed.</param>
+        /// <param name="e">An EventArgs object that contains the event data.</param>
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.isLoadingSettings = checkBox1.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Delete saved settings on selected process event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void deleteSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var deleteSettings = new DeleteSettings();
+            deleteSettings.DeleteSettingsApp(this, processesListBox, countProcessesLbl, searchProcessTxt, GlobalVars.LogFilePath);
+        }
+
+        /// <summary>
+        /// Show saved settings on selected process event. This method is currently empty and can be implemented to display the saved settings for the selected process when the corresponding menu item is clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void showSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var readSettings = new ReadSettings();
+            readSettings.ShowSettings(processesListBox, countProcessesLbl, searchProcessTxt, this, GlobalVars.LogFilePath);
+        }
+
+        /// <summary>
+        /// Kill selected process event.
+        /// This method creates an instance of the ProcessesManage class and calls its KillProcess method, passing the current form, the processes list box, the label for counting processes, and the search process text box as parameters.
+        /// This allows the user to terminate the selected process from the context menu.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void killProcessToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processesManage = new ProcessesManage();
+            processesManage.KillProcess(this, processesListBox, countProcessesLbl, searchProcessTxt);
+        }
+
+        private void SaveSettingsCkb_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.isSaveingSettings = SaveSettingsCkb.Checked;
+            Properties.Settings.Default.Save();
         }
     }
 }

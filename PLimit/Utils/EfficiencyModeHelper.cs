@@ -1,130 +1,184 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace PLimit.Utils
 {
-    internal class EfficiencyModeHelper
+    public class EfficiencyModeHelper
     {
-       // const uint PROCESS_SET_INFORMATION = 0x0200;
-        //const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+        private const uint PROCESS_SET_INFORMATION = 0x0200;
+        private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 
-        // From Win32
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool SetPriorityClass(IntPtr hProcess, uint dwPriorityClass);
+        private const uint IDLE_PRIORITY_CLASS = 0x00000040;
+        private const uint BELOW_NORMAL_PRIORITY_CLASS = 0x00004000;
+        private const uint NORMAL_PRIORITY_CLASS = 0x00000020;
+
+        private const uint PROCESS_POWER_THROTTLING_CURRENT_VERSION = 1;
+        private const uint PROCESS_POWER_THROTTLING_EXECUTION_SPEED = 0x1;
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool GetPriorityClass(IntPtr hProcess);
+        private static extern IntPtr OpenProcess(
+            uint dwDesiredAccess,
+            bool bInheritHandle,
+            int dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool SetProcessInformation(
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetPriorityClass(IntPtr hProcess, uint dwPriorityClass);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern uint GetPriorityClass(IntPtr hProcess);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetProcessInformation(
             IntPtr hProcess,
             PROCESS_INFORMATION_CLASS processInformationClass,
-            ref PROCESS_POWER_THROTTLING_STATE processPowerThrottlingState,
-            uint dwLength);
+            ref PROCESS_POWER_THROTTLING_STATE processInformation,
+            uint processInformationSize);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool GetProcessInformation(
+        private static extern bool GetProcessInformation(
             IntPtr hProcess,
             PROCESS_INFORMATION_CLASS processInformationClass,
-            out PROCESS_POWER_THROTTLING_STATE processPowerThrottlingState,
-            uint dwLength);
+            out PROCESS_POWER_THROTTLING_STATE processInformation,
+            uint processInformationSize);
 
-        enum PROCESS_INFORMATION_CLASS
+        private enum PROCESS_INFORMATION_CLASS
         {
-            ProcessMemoryPriority,
-            ProcessPowerThrottling,
-            // … other values …
+            ProcessMemoryPriority = 0,
+            ProcessMemoryExhaustionInfo = 1,
+            ProcessAppMemoryInfo = 2,
+            ProcessInPrivateInfo = 3,
+            ProcessPowerThrottling = 4
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct PROCESS_POWER_THROTTLING_STATE
+        private struct PROCESS_POWER_THROTTLING_STATE
         {
             public uint Version;
             public uint ControlMask;
             public uint StateMask;
         }
 
-        const uint PROCESS_POWER_THROTTLING_CURRENT_VERSION = 1;
-        const uint PROCESS_POWER_THROTTLING_EXECUTION_SPEED = 0x1;
-
-        /// <summary>
-        /// Ctor.
-        /// </summary>
-        public EfficiencyModeHelper() { }
-
         public bool EnableEfficiencyMode(int pid)
         {
-            IntPtr hProc = Process.GetProcessById(pid).Handle;
-            if (hProc == IntPtr.Zero) return false;
+            IntPtr hProc = OpenProcess(
+                PROCESS_SET_INFORMATION | PROCESS_QUERY_LIMITED_INFORMATION,
+                false,
+                pid);
 
-            // 1) Lower priority
-            const uint IDLE_PRIORITY_CLASS = 0x40;
-            if (!SetPriorityClass(hProc, IDLE_PRIORITY_CLASS))
-                return false;
+            if (hProc == IntPtr.Zero)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
 
-            // 2) Enable EcoQoS / throttle
-            var throttling = new PROCESS_POWER_THROTTLING_STATE
+            try
             {
-                Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
-                ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
-                StateMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED
-            };
+                if (!SetPriorityClass(hProc, IDLE_PRIORITY_CLASS))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
 
-            return SetProcessInformation(
-                hProc,
-                PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
-                ref throttling,
-                (uint)Marshal.SizeOf(typeof(PROCESS_POWER_THROTTLING_STATE))
-            );
+                var state = new PROCESS_POWER_THROTTLING_STATE
+                {
+                    Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+                    ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+                    StateMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+                };
+
+                if (!SetProcessInformation(
+                    hProc,
+                    PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
+                    ref state,
+                    (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>()))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
+
+                return true;
+            }
+            finally
+            {
+                CloseHandle(hProc);
+            }
         }
 
         public bool DisableEfficiencyMode(int pid)
         {
-            IntPtr hProc = Process.GetProcessById(pid).Handle;
-            if (hProc == IntPtr.Zero) return false;
+            IntPtr hProc = OpenProcess(
+                PROCESS_SET_INFORMATION | PROCESS_QUERY_LIMITED_INFORMATION,
+                false,
+                pid);
 
-            // Restore normal priority
-            const uint NORMAL_PRIORITY_CLASS = 0x20; // or use current priority prior to change
-            SetPriorityClass(hProc, NORMAL_PRIORITY_CLASS);
+            if (hProc == IntPtr.Zero)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
 
-            // Clear throttling
-            var throttling = new PROCESS_POWER_THROTTLING_STATE
+            try
             {
-                Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
-                ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
-                StateMask = 0  // disable
-            };
+                if (!SetPriorityClass(hProc, NORMAL_PRIORITY_CLASS))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
 
-            return SetProcessInformation(
-                hProc,
-                PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
-                ref throttling,
-                (uint)Marshal.SizeOf(typeof(PROCESS_POWER_THROTTLING_STATE))
-            );
-        }
+                var state = new PROCESS_POWER_THROTTLING_STATE
+                {
+                    Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+                    ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+                    StateMask = 0
+                };
 
-        public static bool IsEfficiencyModeEnabled(int pid)
-        {
-            IntPtr hProc = Process.GetProcessById(pid).Handle;
-
-            // Check priority
-            int prio = (int)Process.GetProcessById(pid).PriorityClass;
-            bool lowPrio = (prio == (int)ProcessPriorityClass.Idle ||
-                           prio == (int)ProcessPriorityClass.BelowNormal);
-
-            // Check EcoQoS throttle
-            if (GetProcessInformation(
+                if (!SetProcessInformation(
                     hProc,
                     PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
-                    out PROCESS_POWER_THROTTLING_STATE state,
-                    (uint)Marshal.SizeOf(typeof(PROCESS_POWER_THROTTLING_STATE)))
-                && (state.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED) != 0)
-            {
-                return lowPrio;
-            }
+                    ref state,
+                    (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>()))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                }
 
-            return false;
+                return true;
+            }
+            finally
+            {
+                CloseHandle(hProc);
+            }
+        }
+        public bool IsEfficiencyModeEnabled(int pid)
+        {
+            IntPtr hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (hProc == IntPtr.Zero)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+
+            try
+            {
+                uint priorityClass = GetPriorityClass(hProc);
+                if (priorityClass == 0)
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+
+                bool lowPrio =
+                    priorityClass == IDLE_PRIORITY_CLASS ||
+                    priorityClass == BELOW_NORMAL_PRIORITY_CLASS;
+
+                bool gotInfo = GetProcessInformation(
+                    hProc,
+                    PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
+                    out var state,
+                    (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
+
+                if (!gotInfo)
+                {
+                    int err = Marshal.GetLastWin32Error();
+
+                    // Optional: log this instead of throwing if you want "false" on unsupported systems
+                    // throw new Win32Exception(err);
+
+                    return false;
+                }
+
+                bool ecoQosEnabled =
+                    (state.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED) != 0;
+
+                return lowPrio && ecoQosEnabled;
+            }
+            finally
+            {
+                CloseHandle(hProc);
+            }
         }
     }
 }
