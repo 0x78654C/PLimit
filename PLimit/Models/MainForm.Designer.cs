@@ -85,7 +85,7 @@
             systemMonitorPanel.BackColor = Color.FromArgb(22, 22, 22);
             systemMonitorPanel.Location = new Point(12, 527);
             systemMonitorPanel.Name = "systemMonitorPanel";
-            systemMonitorPanel.Size = new Size(1290, 76);
+            systemMonitorPanel.Size = new Size(1301, 76);
             systemMonitorPanel.TabIndex = 11;
             // 
             // processesListBox
@@ -98,7 +98,7 @@
             processesListBox.MultiSelect = false;
             processesListBox.Name = "processesListBox";
             processesListBox.OwnerDraw = true;
-            processesListBox.Size = new Size(1290, 480);
+            processesListBox.Size = new Size(1301, 480);
             processesListBox.Sorting = SortOrder.Ascending;
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
@@ -163,7 +163,7 @@
             // 
             searchProcessBtn.Anchor = AnchorStyles.Top;
             searchProcessBtn.Enabled = false;
-            searchProcessBtn.Location = new Point(676, 12);
+            searchProcessBtn.Location = new Point(682, 12);
             searchProcessBtn.Name = "searchProcessBtn";
             searchProcessBtn.Size = new Size(75, 23);
             searchProcessBtn.TabIndex = 7;
@@ -175,7 +175,7 @@
             // searchProcessTxt
             // 
             searchProcessTxt.Anchor = AnchorStyles.Top;
-            searchProcessTxt.Location = new Point(437, 13);
+            searchProcessTxt.Location = new Point(443, 13);
             searchProcessTxt.Name = "searchProcessTxt";
             searchProcessTxt.Size = new Size(233, 23);
             searchProcessTxt.TabIndex = 6;
@@ -187,7 +187,7 @@
             // refreshProcessListBtn
             // 
             refreshProcessListBtn.Anchor = AnchorStyles.Top;
-            refreshProcessListBtn.Location = new Point(752, 12);
+            refreshProcessListBtn.Location = new Point(758, 12);
             refreshProcessListBtn.Name = "refreshProcessListBtn";
             refreshProcessListBtn.Size = new Size(102, 23);
             refreshProcessListBtn.TabIndex = 5;
@@ -310,14 +310,14 @@
             // enableToolStripMenuItem2
             // 
             enableToolStripMenuItem2.Name = "enableToolStripMenuItem2";
-            enableToolStripMenuItem2.Size = new Size(180, 22);
+            enableToolStripMenuItem2.Size = new Size(112, 22);
             enableToolStripMenuItem2.Text = "Enable";
             enableToolStripMenuItem2.Click += enableToolStripMenuItem2_Click;
             // 
             // disableToolStripMenuItem2
             // 
             disableToolStripMenuItem2.Name = "disableToolStripMenuItem2";
-            disableToolStripMenuItem2.Size = new Size(180, 22);
+            disableToolStripMenuItem2.Size = new Size(112, 22);
             disableToolStripMenuItem2.Text = "Disable";
             disableToolStripMenuItem2.Click += disableToolStripMenuItem2_Click;
             // 
@@ -400,7 +400,7 @@
             // 
             checkBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(1115, 607);
+            checkBox1.Location = new Point(1126, 607);
             checkBox1.Name = "checkBox1";
             checkBox1.Size = new Size(187, 19);
             checkBox1.TabIndex = 9;
@@ -412,7 +412,7 @@
             // 
             SaveSettingsCkb.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             SaveSettingsCkb.AutoSize = true;
-            SaveSettingsCkb.Location = new Point(998, 607);
+            SaveSettingsCkb.Location = new Point(1009, 607);
             SaveSettingsCkb.Name = "SaveSettingsCkb";
             SaveSettingsCkb.Size = new Size(97, 19);
             SaveSettingsCkb.TabIndex = 10;
@@ -424,7 +424,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1317, 631);
+            ClientSize = new Size(1328, 631);
             Controls.Add(SaveSettingsCkb);
             Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
