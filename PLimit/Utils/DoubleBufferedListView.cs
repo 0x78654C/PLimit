@@ -56,38 +56,7 @@ namespace PLimit
             Invalidate(); // repaint headers to update arrow
         }
 
-        private sealed class ColumnComparer : IComparer
-        {
-            private readonly int          _col;
-            private readonly bool         _asc;
-            private readonly HashSet<int> _numericCols;
 
-            public ColumnComparer(int col, bool asc, HashSet<int> numericCols)
-            {
-                _col        = col;
-                _asc        = asc;
-                _numericCols = numericCols;
-            }
-
-            public int Compare(object? x, object? y)
-            {
-                var ix = (ListViewItem)x!;
-                var iy = (ListViewItem)y!;
-
-                string tx = _col < ix.SubItems.Count ? ix.SubItems[_col].Text : string.Empty;
-                string ty = _col < iy.SubItems.Count ? iy.SubItems[_col].Text : string.Empty;
-
-                int result;
-                if (_numericCols.Contains(_col)
-                    && long.TryParse(tx, out long nx)
-                    && long.TryParse(ty, out long ny))
-                    result = nx.CompareTo(ny);
-                else
-                    result = string.Compare(tx, ty, StringComparison.OrdinalIgnoreCase);
-
-                return _asc ? result : -result;
-            }
-        }
 
         // ── Header drawing ────────────────────────────────────────────────
 
@@ -188,6 +157,39 @@ namespace PLimit
 
             var textBounds = Rectangle.Inflate(e.Bounds, -3, 0);
             TextRenderer.DrawText(e.Graphics, e.SubItem?.Text, e.SubItem?.Font ?? Font, textBounds, fg, flags);
+        }
+    }
+
+    internal sealed class ColumnComparer : IComparer
+    {
+        private readonly int          _col;
+        private readonly bool         _asc;
+        private readonly HashSet<int> _numericCols;
+
+        public ColumnComparer(int col, bool asc, HashSet<int> numericCols)
+        {
+            _col         = col;
+            _asc         = asc;
+            _numericCols = numericCols;
+        }
+
+        public int Compare(object? x, object? y)
+        {
+            var ix = (ListViewItem)x!;
+            var iy = (ListViewItem)y!;
+
+            string tx = _col < ix.SubItems.Count ? ix.SubItems[_col].Text : string.Empty;
+            string ty = _col < iy.SubItems.Count ? iy.SubItems[_col].Text : string.Empty;
+
+            int result;
+            if (_numericCols.Contains(_col)
+                && long.TryParse(tx, out long nx)
+                && long.TryParse(ty, out long ny))
+                result = nx.CompareTo(ny);
+            else
+                result = string.Compare(tx, ty, StringComparison.OrdinalIgnoreCase);
+
+            return _asc ? result : -result;
         }
     }
 }

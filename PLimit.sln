@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLimit", "PLimit\PLimit.csproj", "{DF272C2F-ACD5-44E7-8D46-842D1018DE2E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLimit.Tests", "PLimit\PLimit.Tests\PLimit.Tests.csproj", "{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -26,6 +28,14 @@ Global
 		{DF272C2F-ACD5-44E7-8D46-842D1018DE2E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF272C2F-ACD5-44E7-8D46-842D1018DE2E}.Release|x64.ActiveCfg = Release|Any CPU
 		{DF272C2F-ACD5-44E7-8D46-842D1018DE2E}.Release|x64.Build.0 = Release|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Debug|x64.Build.0 = Debug|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Release|x64.ActiveCfg = Release|Any CPU
+		{A5E67891-B012-4C3D-9E4F-5A6B7C8D9012}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

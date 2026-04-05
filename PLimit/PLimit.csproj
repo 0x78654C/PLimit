@@ -50,4 +50,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="PLimit.Tests\**" />
+  </ItemGroup>
+
 </Project>
