@@ -76,6 +76,7 @@
             countProcessesLbl = new Label();
             checkBox1 = new CheckBox();
             SaveSettingsCkb = new CheckBox();
+            loadSavedSettingsToolStripMenuItem = new ToolStripMenuItem();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -198,9 +199,9 @@
             // 
             // actionMenuStrip
             // 
-            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, windowsDynamicThreadPriorityBoostWDTPBToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem, toolStripSeparator1, showSavedSettingsToolStripMenuItem, toolStripSeparator2, killProcessToolStripMenuItem, deleteSavedSettingsToolStripMenuItem });
+            actionMenuStrip.Items.AddRange(new ToolStripItem[] { boostToolStripMenuItem, iOPriorityToolStripMenuItem, priorityToolStripMenuItem, windowsDynamicThreadPriorityBoostWDTPBToolStripMenuItem, afinityToolStripMenuItem, efficiencyModeToolStripMenuItem, toolStripSeparator1, loadSavedSettingsToolStripMenuItem, showSavedSettingsToolStripMenuItem, toolStripSeparator2, killProcessToolStripMenuItem, deleteSavedSettingsToolStripMenuItem });
             actionMenuStrip.Name = "contextMenuStrip1";
-            actionMenuStrip.Size = new Size(334, 214);
+            actionMenuStrip.Size = new Size(334, 258);
             // 
             // boostToolStripMenuItem
             // 
@@ -420,6 +421,13 @@
             SaveSettingsCkb.UseVisualStyleBackColor = true;
             SaveSettingsCkb.CheckedChanged += SaveSettingsCkb_CheckedChanged;
             // 
+            // loadSavedSettingsToolStripMenuItem
+            // 
+            loadSavedSettingsToolStripMenuItem.Name = "loadSavedSettingsToolStripMenuItem";
+            loadSavedSettingsToolStripMenuItem.Size = new Size(333, 22);
+            loadSavedSettingsToolStripMenuItem.Text = "Load Saved Settings";
+            loadSavedSettingsToolStripMenuItem.Click += loadSavedSettingsToolStripMenuItem_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -495,5 +503,6 @@
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripMenuItem enableToolStripMenuItem2;
         private ToolStripMenuItem disableToolStripMenuItem2;
+        private ToolStripMenuItem loadSavedSettingsToolStripMenuItem;
     }
 }

@@ -53,7 +53,7 @@ namespace PLimit
                 getProcesses.GetProcesses(ref processesListBox);
                 searchProcessTxt.SetWatermark("Enter process name or PID...");
                 countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
-                LoadSettins();
+                LoadSettings();
             });
         }
 
@@ -61,17 +61,48 @@ namespace PLimit
         /// Load settings method. This method checks if the isLoadingSettings setting is enabled, and if so, it creates an instance of the ReadSettings class and calls its methods to read and apply the saved settings for boost, efficiency, affinity, priority, IO priority, and Wdptb (Windows Defender Process Threat Detection) for the processes displayed in the processesListBox. 
         /// The settings are applied to the processes list box, the count of processes label, and the search process text box in the main form.
         /// </summary>
-        private void LoadSettins()
+        private void LoadSettings()
         {
             if (Properties.Settings.Default.isLoadingSettings)
             {
                 var readSettings = new ReadSettings();
-                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this);
-                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this);
-                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this);
-                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
-                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this);
-                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this);
+                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this, "", true);
+                this.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils.Utils();
+                    utils.RefreshProcessList(this, processesListBox, countProcessesLbl);
+                    utils.SearchProcess(searchProcessTxt, processesListBox);
+                }));
+            }
+        }
+
+        /// <summary>
+        /// Load settings method with PID parameter. 
+        /// This method checks if the provided PID is not null or empty, and if so, it creates an instance of the ReadSettings class and calls its methods to read and apply the saved settings for boost, efficiency, affinity, priority, IO priority, and Wdptb (Windows Defender Process Threat Detection) for the process with the specified PID.
+        /// </summary>
+        /// <param name="pid"></param>
+        private void LoadSettings(string pid)
+        {
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var readSettings = new ReadSettings();
+                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                this.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils.Utils();
+                    utils.RefreshProcessList(this, processesListBox, countProcessesLbl);
+                    utils.SearchProcess(searchProcessTxt, processesListBox);
+                }));
             }
         }
 
@@ -601,6 +632,24 @@ namespace PLimit
         {
             var prirityBoost = new PriorityProcess();
             prirityBoost.SetThreadPriorityBoost(this, processesListBox, countProcessesLbl, searchProcessTxt, false);
+        }
+
+        /// <summary>
+        /// Load saved settings on selected process event. This method is currently empty and can be implemented to load the saved settings for the selected process when the corresponding menu item is clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void loadSavedSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Invoke(delegate
+            {
+                var selectedProcesses = processesListBox.SelectedItems;
+                if (selectedProcesses.Count > 0)
+                {
+                    var pid = selectedProcesses[0].SubItems[1].Text;
+                    LoadSettings(pid);
+                }
+            });
         }
     }
 }

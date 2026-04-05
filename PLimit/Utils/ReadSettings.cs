@@ -13,14 +13,34 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadSettingsBoost(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        /// <param name="isStartUp"></param>
+        public void ReadSettingsBoost(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
-
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        if (string.IsNullOrEmpty(setting.Boosted))
+                            continue;
+                        var boost = new Boost();
+                        if (setting.Boosted == "True")
+                            boost.SetBoost(from, processesListBox, label, searchBox, true, pid, isStartUp);
+                        else
+                            boost.SetBoost(from, processesListBox, label, searchBox, false, pid, isStartUp);
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -31,9 +51,9 @@
                             continue;
                         var boost = new Boost();
                         if (setting.Boosted == "True")
-                            boost.SetBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text);
+                            boost.SetBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text, isStartUp);
                         else
-                            boost.SetBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text);
+                            boost.SetBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text, isStartUp);
                     }
                 }
             }
@@ -46,13 +66,35 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadSettingsEfficiency(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        public void ReadSettingsEfficiency(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
+
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        if (string.IsNullOrEmpty(setting.Boosted))
+                            continue;
+                        var boost = new Boost();
+                        var efficiency = new Efficiency();
+                        if (setting.Efficiency == "True")
+                            efficiency.EnableEfficiency(from, processesListBox, label, searchBox, pid, isStartUp);
+                        else
+                            efficiency.DisableEfficiency(from, processesListBox, label, searchBox, pid, isStartUp);
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -63,9 +105,9 @@
                             continue;
                         var efficiency = new Efficiency();
                         if (setting.Efficiency == "True")
-                            efficiency.EnableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            efficiency.EnableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         else
-                            efficiency.DisableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            efficiency.DisableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                     }
                 }
             }
@@ -78,13 +120,30 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadSettingsAffinity(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        /// <param name="isStartUp"></param>
+        public void ReadSettingsAffinity(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        var affinity = new Affinity();
+                        if (!string.IsNullOrEmpty(setting.Affinity))
+                            affinity.SetAffinity(from, processesListBox, null, label, searchBox, null, setting.Affinity,pid, isStartUp);
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -93,7 +152,7 @@
                     {
                         var affinity = new Affinity();
                         if (!string.IsNullOrEmpty(setting.Affinity))
-                            affinity.SetAffinity(from, processesListBox, null, label, searchBox, null, setting.Affinity, item.SubItems[1].Text);
+                            affinity.SetAffinity(from, processesListBox, null, label, searchBox, null, setting.Affinity, item.SubItems[1].Text, isStartUp);
                     }
                 }
             }
@@ -106,13 +165,54 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadSettingsPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        /// <param name="isStartUp"></param>
+        public void ReadSettingsPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        if (string.IsNullOrEmpty(setting.Property))
+                            continue;
+                        if (setting.Property == "Normal")
+                        {
+                            var priority = new PriorityProcess();
+                            priority.NormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.Property == "High")
+                        {
+                            var priority = new PriorityProcess();
+                            priority.HighPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.Property == "AboveNormal")
+                        {
+                            var priority = new PriorityProcess();
+                            priority.AboveNormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.Property == "BelowNormal")
+                        {
+                            var priority = new PriorityProcess();
+                            priority.BelowNormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.Property == "RealTime")
+                        {
+                            var priority = new PriorityProcess();
+                            priority.RealTimePriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -124,27 +224,27 @@
                         if (setting.Property == "Normal")
                         {
                             var priority = new PriorityProcess();
-                            priority.NormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            priority.NormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.Property == "High")
                         {
                             var priority = new PriorityProcess();
-                            priority.HighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            priority.HighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.Property == "AboveNormal")
                         {
                             var priority = new PriorityProcess();
-                            priority.AboveNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            priority.AboveNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.Property == "BelowNormal")
                         {
                             var priority = new PriorityProcess();
-                            priority.BelowNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            priority.BelowNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.Property == "RealTime")
                         {
                             var priority = new PriorityProcess();
-                            priority.RealTimePriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            priority.RealTimePriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                     }
                 }
@@ -158,13 +258,49 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadSettingsIOPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        /// <param name="isStartUp"></param>
+        public void ReadSettingsIOPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        if (string.IsNullOrEmpty(setting.IOProperty))
+                            continue;
+                        if (setting.IOProperty == "Normal")
+                        {
+                            var ioPriority = new IOPriority();
+                            ioPriority.IONormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.IOProperty == "Low")
+                        {
+                            var ioPriority = new IOPriority();
+                            ioPriority.IOLowPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.IOProperty == "High")
+                        {
+                            var ioPriority = new IOPriority();
+                            ioPriority.IOHighPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                        if (setting.IOProperty == "VeryLow")
+                        {
+                            var ioPriority = new IOPriority();
+                            ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, pid, isStartUp);
+                        }
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -176,22 +312,22 @@
                         if (setting.IOProperty == "Normal")
                         {
                             var ioPriority = new IOPriority();
-                            ioPriority.IONormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            ioPriority.IONormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.IOProperty == "Low")
                         {
                             var ioPriority = new IOPriority();
-                            ioPriority.IOLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            ioPriority.IOLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.IOProperty == "High")
                         {
                             var ioPriority = new IOPriority();
-                            ioPriority.IOHighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            ioPriority.IOHighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                         if (setting.IOProperty == "VeryLow")
                         {
                             var ioPriority = new IOPriority();
-                            ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text);
+                            ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
                         }
                     }
                 }
@@ -205,13 +341,34 @@
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="from"></param>
-        public void ReadWdptbSettings(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from)
+        /// <param name="isStartUp"></param>
+        public void ReadWdptbSettings(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
         {
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 return;
             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
             if (settings == null)
                 return;
+            if (!string.IsNullOrEmpty(pid))
+            {
+                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
+                if (string.IsNullOrEmpty(processName))
+                    return;
+                foreach (var setting in settings)
+                {
+                    if (setting.ProcessName == processName)
+                    {
+                        if (string.IsNullOrEmpty(setting.Wdptb))
+                            continue;
+                        var wdptb = new PriorityProcess();
+                        if (setting.Wdptb == "Enabled")
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, pid, isStartUp);
+                        else
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, pid, isStartUp);
+                    }
+                }
+                return;
+            }
             foreach (var setting in settings)
             {
                 foreach (var item in processesListBox.Items.Cast<ListViewItem>())
@@ -222,9 +379,9 @@
                             continue;
                         var wdptb = new PriorityProcess();
                         if (setting.Wdptb == "Enabled")
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text);
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text, isStartUp);
                         else
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text);
+                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text, isStartUp);
                     }
                 }
             }

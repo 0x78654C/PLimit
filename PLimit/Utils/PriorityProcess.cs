@@ -16,17 +16,21 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -46,17 +50,21 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -74,17 +82,21 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -104,17 +116,21 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -135,17 +151,21 @@ namespace PLimit.Utils
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
             setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -177,17 +197,21 @@ namespace PLimit.Utils
         /// <param name="searchBox"></param>
         /// <param name="enable">true to enable boost, false to disable it.</param>
         /// <param name="pid"></param>
-        public void SetThreadPriorityBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool enable, string pid = "")
+        /// <param name="isStartUp"></param>
+        public void SetThreadPriorityBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool enable, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var manage = new ProcessesManage();
             manage.SetThreadBoost(enable, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)

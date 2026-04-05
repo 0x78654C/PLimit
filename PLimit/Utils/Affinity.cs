@@ -19,7 +19,7 @@ namespace PLimit.Utils
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="sender"></param>
-        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask = "", string pidId = "")
+        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask = "", string pidId = "", bool isStartUp = false)
         {
             int pid;
             if (!string.IsNullOrWhiteSpace(pidId))
@@ -66,12 +66,15 @@ namespace PLimit.Utils
                 // access denied / process exited / 32-bit limitations / etc.
                 // Optional: MessageBox.Show("Couldn't change affinity.");
             }
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(mask))
             {
                 if (Properties.Settings.Default.isSaveingSettings)

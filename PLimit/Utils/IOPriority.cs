@@ -11,17 +11,20 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOVeryLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void IOVeryLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -39,17 +42,20 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void IOLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -67,17 +73,20 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IONormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void IONormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -95,17 +104,20 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void IOHighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void IOHighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)

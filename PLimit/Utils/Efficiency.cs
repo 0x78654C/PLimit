@@ -13,17 +13,21 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void EnableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void EnableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
+
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
@@ -43,17 +47,20 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void DisableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
+        public void DisableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUp)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)

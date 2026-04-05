@@ -12,17 +12,21 @@
         /// <param name="processesListBox"></param>
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
-        public void SetBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool isEnable, string pid="")
+        public void SetBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool isEnable, string pid = "", bool isStartUP = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setBoost = new ProcessesManage();
             setBoost.SetBoost(isEnable, int.Parse(processId));
-            from.BeginInvoke(new Action(() =>
+            if (!isStartUP)
             {
-                var utils = new Utils();
-                utils.RefreshProcessList(from, processesListBox, label);
-                utils.SearchProcess(searchBox, processesListBox);
-            }));
+                from.BeginInvoke(new Action(() =>
+                {
+                    var utils = new Utils();
+                    utils.RefreshProcessList(from, processesListBox, label);
+                    utils.SearchProcess(searchBox, processesListBox);
+                }));
+            }
+
             if (string.IsNullOrEmpty(pid))
             {
                 if (Properties.Settings.Default.isSaveingSettings)
