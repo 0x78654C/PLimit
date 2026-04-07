@@ -1,6 +1,7 @@
 using PLimit.Utils;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace PLimit
 {
@@ -23,6 +24,8 @@ namespace PLimit
         /// <param name="e"></param>
         private void MainForm_Load(object sender, EventArgs e)
         {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            this.Text = version != null? $"PLimit - Process Limiter v{version.Major}.{version.Minor}" : "PLimit - Process Limiter v1.0";
             checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
             SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
 
@@ -650,6 +653,12 @@ namespace PLimit
                     LoadSettings(pid);
                 }
             });
+        }
+
+        private void aboutButton_Click(object sender, EventArgs e)
+        {
+            using var about = new AboutForm();
+            about.ShowDialog(this);
         }
     }
 }

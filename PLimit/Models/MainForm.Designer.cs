@@ -77,6 +77,7 @@
             checkBox1 = new CheckBox();
             SaveSettingsCkb = new CheckBox();
             loadSavedSettingsToolStripMenuItem = new ToolStripMenuItem();
+            aboutButton = new Button();
             actionMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -428,11 +429,23 @@
             loadSavedSettingsToolStripMenuItem.Text = "Load Saved Settings";
             loadSavedSettingsToolStripMenuItem.Click += loadSavedSettingsToolStripMenuItem_Click;
             // 
+            // aboutButton
+            // 
+            aboutButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            aboutButton.Location = new Point(1238, 12);
+            aboutButton.Name = "aboutButton";
+            aboutButton.Size = new Size(75, 23);
+            aboutButton.TabIndex = 12;
+            aboutButton.Text = "About";
+            aboutButton.UseVisualStyleBackColor = true;
+            aboutButton.Click += aboutButton_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1328, 631);
+            Controls.Add(aboutButton);
             Controls.Add(SaveSettingsCkb);
             Controls.Add(checkBox1);
             Controls.Add(countProcessesLbl);
@@ -504,5 +517,6 @@
         private ToolStripMenuItem enableToolStripMenuItem2;
         private ToolStripMenuItem disableToolStripMenuItem2;
         private ToolStripMenuItem loadSavedSettingsToolStripMenuItem;
+        private Button aboutButton;
     }
 }

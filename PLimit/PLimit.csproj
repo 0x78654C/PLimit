@@ -21,6 +21,9 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+    <EmbeddedResource Include="..\logo1.png">
+      <Link>logo1.png</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
