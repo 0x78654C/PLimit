@@ -1,3 +1,19 @@
+/*
+      Description: A lightweight Windows utility to manage and fine-tune running process priorities,
+      CPU affinity, I/O priority, CPU boost, thread priority boost, and efficiency mode.
+
+      This app is distributed under the MIT License.
+      Copyright © 2026 x_coding. All rights reserved.
+
+      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+      FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+      OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+      SOFTWARE.
+*/
+
 using PLimit.Utils;
 using System.ComponentModel;
 using System.Diagnostics;
