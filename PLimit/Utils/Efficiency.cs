@@ -16,6 +16,12 @@
         public void EnableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
             if (!isStartUp)
@@ -50,6 +56,12 @@
         public void DisableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             var setEfficiencyMode = new EfficiencyModeHelper();
             setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
             if (!isStartUp)

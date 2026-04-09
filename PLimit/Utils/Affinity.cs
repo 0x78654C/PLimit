@@ -32,7 +32,12 @@ namespace PLimit.Utils
                 if (!int.TryParse(afinityToolStripMenuItem.Tag?.ToString(), out pid))
                     return;
             }
-
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(pid.ToString()))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             Process p;
             try { p = Process.GetProcessById(pid); }

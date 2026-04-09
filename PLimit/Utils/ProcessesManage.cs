@@ -241,7 +241,7 @@ namespace PLimit.Utils
                 foreach (var process in processes)
                 {
                     var user = GetProcessUser(process);
-                   // if (user != Environment.UserName) continue;
+                    // if (user != Environment.UserName) continue;
 
                     IntPtr handle = IntPtr.Zero;
                     try
@@ -266,7 +266,7 @@ namespace PLimit.Utils
                         var dptb = GetThreadBoost(process.Id);
 
                         var storedSetting = false;
-                        if(File.Exists(GlobalVars.LogFilePath))
+                        if (File.Exists(GlobalVars.LogFilePath))
                         {
                             var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
                             storedSetting = settings.Any(s => s.ProcessName == process.ProcessName);
@@ -486,6 +486,12 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var getProcess = Process.GetProcessById(int.Parse(processId));
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             try
             {
                 getProcess.Kill();
@@ -501,6 +507,26 @@ namespace PLimit.Utils
                 utils.RefreshProcessList(from, processesListBox, label);
                 utils.SearchProcess(searchBox, processesListBox);
             }));
+        }
+
+        /// <summary>
+        /// Check if the given PID corresponds to a running process.
+        /// </summary>
+        /// <param name="pid">The process ID to check.</param>
+        /// <returns>True if the PID corresponds to a running process, otherwise false.</returns>
+        public bool IsPidValid(string pid)
+        {
+            if (!int.TryParse(pid, out int processId))
+                return false;
+            try
+            {
+                Process.GetProcessById(processId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

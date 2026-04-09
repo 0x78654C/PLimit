@@ -15,6 +15,11 @@
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
+            if (!setIoPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
             if (!isStartUp)
             {
@@ -46,6 +51,11 @@
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
+            if (!setIoPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
             if (!isStartUp)
             {
@@ -77,6 +87,11 @@
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
+            if (!setIoPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
             if (!isStartUp)
             {
@@ -108,6 +123,11 @@
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setIoPriority = new ProcessesManage();
+            if (!setIoPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
             if (!isStartUp)
             {

@@ -21,6 +21,11 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
+            if (!setPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
             if (!isStartUp)
             {
@@ -55,6 +60,11 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
+            if (!setPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
             if (!isStartUp)
             {
@@ -87,6 +97,11 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
+            if (!setPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
             if (!isStartUp)
             {
@@ -121,6 +136,11 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
+            if (!setPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
             if (!isStartUp)
             {
@@ -156,6 +176,11 @@ namespace PLimit.Utils
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setPriority = new ProcessesManage();
+            if (!setPriority.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
             if (!isStartUp)
             {
@@ -175,16 +200,7 @@ namespace PLimit.Utils
                 }
             }
         }
-        /// <summary>
-        /// Reads the dynamic thread priority boost status for the selected process.
-        /// Returns true if boost is enabled, false if disabled, null if the status could not be read (e.g. access denied).
-        /// </summary>
-        /// <param name="processId"></param>
-        public bool? GetThreadPriorityBoost(int processId)
-        {
-            var manage = new ProcessesManage();
-            return manage.GetThreadBoost(processId);
-        }
+ 
 
         /// <summary>
         /// Enables or disables the dynamic thread priority boost for all threads of the selected process.
@@ -201,6 +217,12 @@ namespace PLimit.Utils
         public void SetThreadPriorityBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool enable, string pid = "", bool isStartUp = false)
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             var manage = new ProcessesManage();
             manage.SetThreadBoost(enable, int.Parse(processId));
             if (!isStartUp)

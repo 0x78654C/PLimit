@@ -41,7 +41,7 @@ namespace PLimit
         private void MainForm_Load(object sender, EventArgs e)
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            this.Text = version != null? $"PLimit - Process Limiter v{version.Major}.{version.Minor}" : "PLimit - Process Limiter v1.0";
+            this.Text = version != null ? $"PLimit - Process Limiter v{version.Major}.{version.Minor}" : "PLimit - Process Limiter v1.0";
             checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
             SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
 
@@ -109,13 +109,19 @@ namespace PLimit
         {
             if (!string.IsNullOrEmpty(pid))
             {
+                var processManage = new ProcessesManage();
+                if (!processManage.IsPidValid(pid))
+                {
+                    MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 var readSettings = new ReadSettings();
-                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
-                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
-                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
-                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
-                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
-                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this,pid,true);
+                readSettings.ReadSettingsBoost(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
+                readSettings.ReadSettingsEfficiency(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
+                readSettings.ReadSettingsAffinity(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
+                readSettings.ReadSettingsPriority(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
+                readSettings.ReadSettingsIOPriority(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
+                readSettings.ReadWdptbSettings(processesListBox, countProcessesLbl, searchProcessTxt, this, pid, true);
                 this.BeginInvoke(new Action(() =>
                 {
                     var utils = new Utils.Utils();
@@ -426,6 +432,12 @@ namespace PLimit
             if (!int.TryParse(processesListBox.SelectedItems[0].SubItems[1].Text, out int pid))
                 return;
 
+            var processManage = new ProcessesManage();
+            if (!processManage.IsPidValid(pid.ToString()))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             Process p;
             try { p = Process.GetProcessById(pid); }
             catch { return; }

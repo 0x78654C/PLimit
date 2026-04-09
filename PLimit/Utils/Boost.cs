@@ -16,6 +16,11 @@
         {
             var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
             var setBoost = new ProcessesManage();
+            if (!setBoost.IsPidValid(processId))
+            {
+                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             setBoost.SetBoost(isEnable, int.Parse(processId));
             if (!isStartUP)
             {
