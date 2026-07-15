@@ -5,7 +5,7 @@
 <h1 align="center">PLimit — Process Limiter</h1>
 
 <p align="center">
-  A lightweight Windows utility to manage and fine-tune running process priorities, CPU affinity, I/O priority, CPU boost, thread priority boost, and efficiency mode — all from a clean dark-themed UI.
+  A lightweight Windows utility to manage and fine-tune running process priorities, CPU affinity, I/O priority, process priority boost, thread priority boost, and efficiency mode — all from a clean dark-themed UI.
 </p>
 
 ---
@@ -13,7 +13,7 @@
 ## Requirements
 
 - Windows 10 / 11 (64-bit)
-- [.NET 8.0 Desktop SDK for compile](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 10.0 Desktop SDK for compilation](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 - **Run as Administrator** (required to modify process settings)
 
 ---
@@ -56,8 +56,8 @@ Control disk access priority for a process:
 ### 🧩 CPU Affinity
 Restrict a process to specific CPU cores via the right-click context menu. At least one core must remain enabled.
 
-### 🚀 CPU Boost
-Enable or disable dynamic CPU frequency boost for a selected process.
+### 🚀 Process Priority Boost
+Enable or disable Windows dynamic scheduling-priority boosts for a selected process.
 
 ### 🧵 Thread Priority Boost
 Read and control the **dynamic thread priority boost** for a selected process.
@@ -102,7 +102,13 @@ cd PLimit
 dotnet build PLimit.sln -c Release
 ```
 
-The output is placed in `PLimit\bin\Release\net8.0-windows\`.
+The output is placed in `PLimit\bin\Release\net10.0-windows\`.
+
+---
+
+## Release Notes
+
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the latest changes.
 
 ---
 
