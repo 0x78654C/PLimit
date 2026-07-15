@@ -18,7 +18,7 @@ namespace PLimit
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             versionLabel.Text = version != null
-                ? $"Version {version.Major}.{version.Minor}"
+                ? $"Version {version.Major}.{version.Minor}.{version.Build}"
                 : "Version 1.0.0";
         }
 

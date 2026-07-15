@@ -1,9 +1,9 @@
 /*
       Description: A lightweight Windows utility to manage and fine-tune running process priorities,
-      CPU affinity, I/O priority, CPU boost, thread priority boost, and efficiency mode.
+      CPU affinity, I/O priority, process priority boost, thread priority boost, and efficiency mode.
 
       This app is distributed under the MIT License.
-      Copyright © 2026 x_coding. All rights reserved.
+      Copyright (c) 2026 x_coding. All rights reserved.
 
       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
       IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -15,7 +15,6 @@
 */
 
 using PLimit.Utils;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -23,10 +22,20 @@ namespace PLimit
 {
     public partial class MainForm : Form
     {
-        private BackgroundWorker? _backGroundWorker;
+        private static readonly int[] MinimumProcessColumnWidths =
+            { 150, 55, 75, 60, 70, 85, 90, 85, 65, 80 };
+        private static readonly int[] PreferredProcessColumnWidths =
+            { 250, 119, 120, 120, 120, 105, 120, 120, 90, 130 };
+
+        private readonly SemaphoreSlim _refreshGate = new(1, 1);
+        private readonly CancellationTokenSource _refreshCancellation = new();
+        private IReadOnlyList<ProcessSnapshot> _processSnapshots = Array.Empty<ProcessSnapshot>();
         private int? _lastPid;
         private int _lastOffsetFromTop; // selectedIndex - topIndex
         private int _lastTopIndex;
+        private bool _isPointerOverProcessList;
+        private bool _isClosing;
+        private bool _refreshRequested;
 
         public MainForm()
         {
@@ -38,42 +47,91 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            this.Text = version != null ? $"PLimit - Process Limiter v{version.Major}.{version.Minor}" : "PLimit - Process Limiter v1.0";
+            this.Text = version != null ? $"PLimit - Process Limiter v{version.Major}.{version.Minor}.{version.Build}" : "PLimit - Process Limiter v1.0";
             checkBox1.Checked = Properties.Settings.Default.isLoadingSettings;
             SaveSettingsCkb.Checked = Properties.Settings.Default.isSaveingSettings;
 
             DarkTheme.Apply(this, actionMenuStrip);
+            searchProcessTxt.SetWatermark("Enter process name or PID...");
+            UpdateProcessListLayout();
 
-            _backGroundWorker = new BackgroundWorker();
-            _backGroundWorker.DoWork += _backGroundWorker_DoWork;
-            _backGroundWorker.RunWorkerAsync();
+            await RefreshProcessListAsync(showBusyState: true);
+            if (!_isClosing)
+                LoadSettings();
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            // Keep the ListView filling all space between the toolbar and the monitor panel.
-            processesListBox.Height = systemMonitorPanel.Top - processesListBox.Top - 3;
+            if (WindowState != FormWindowState.Minimized)
+                UpdateProcessListLayout();
         }
 
-
-        /// <summary>
-        /// Background worker for load runing processes.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void _backGroundWorker_DoWork(object? sender, DoWorkEventArgs e)
+        private void UpdateProcessListLayout()
         {
-            this.Invoke(delegate
+            const int leftMargin = 12;
+            const int rightMargin = 15;
+            const int monitorHeight = 76;
+            const int monitorBottomMargin = 28;
+            const int listGap = 6;
+
+            int contentWidth = Math.Max(300, ClientSize.Width - leftMargin - rightMargin);
+            int monitorTop = Math.Max(
+                processesListBox.Top + 120 + listGap,
+                ClientSize.Height - monitorBottomMargin - monitorHeight);
+
+            systemMonitorPanel.SetBounds(leftMargin, monitorTop, contentWidth, monitorHeight);
+            processesListBox.SetBounds(
+                leftMargin,
+                processesListBox.Top,
+                contentWidth,
+                Math.Max(120, monitorTop - processesListBox.Top - listGap));
+
+            ResizeProcessColumns();
+        }
+
+        private void ResizeProcessColumns()
+        {
+            if (processesListBox.Columns.Count != MinimumProcessColumnWidths.Length)
+                return;
+
+            int availableWidth = Math.Max(1, processesListBox.ClientSize.Width - 4);
+            int minimumTotal = MinimumProcessColumnWidths.Sum();
+            int preferredGrowth = PreferredProcessColumnWidths
+                .Select((width, index) => width - MinimumProcessColumnWidths[index])
+                .Sum();
+
+            processesListBox.BeginUpdate();
+            try
             {
-                var getProcesses = new ProcessesManage();
-                getProcesses.GetProcesses(ref processesListBox);
-                searchProcessTxt.SetWatermark("Enter process name or PID...");
-                countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
-                LoadSettings();
-            });
+                if (availableWidth <= minimumTotal)
+                {
+                    for (int index = 0; index < processesListBox.Columns.Count; index++)
+                        processesListBox.Columns[index].Width = MinimumProcessColumnWidths[index];
+                    return;
+                }
+
+                int extraWidth = availableWidth - minimumTotal;
+                int assignedWidth = 0;
+                for (int index = 0; index < processesListBox.Columns.Count - 1; index++)
+                {
+                    int growthWeight = PreferredProcessColumnWidths[index] - MinimumProcessColumnWidths[index];
+                    int width = MinimumProcessColumnWidths[index]
+                        + extraWidth * growthWeight / preferredGrowth;
+                    processesListBox.Columns[index].Width = width;
+                    assignedWidth += width;
+                }
+
+                processesListBox.Columns[^1].Width = Math.Max(
+                    MinimumProcessColumnWidths[^1],
+                    availableWidth - assignedWidth);
+            }
+            finally
+            {
+                processesListBox.EndUpdate();
+            }
         }
 
         /// <summary>
@@ -165,7 +223,7 @@ namespace PLimit
             if (_lastPid.HasValue)
             {
                 string pidText = _lastPid.Value.ToString();
-                ListViewItem found = null;
+                ListViewItem? found = null;
 
                 foreach (ListViewItem it in processesListBox.Items)
                 {
@@ -198,9 +256,9 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void refreshProcessListBtn_Click(object sender, EventArgs e)
+        private async void refreshProcessListBtn_Click(object sender, EventArgs e)
         {
-            RefreshProcessList();
+            await RefreshProcessListAsync(showBusyState: true);
         }
 
         /// <summary>
@@ -223,18 +281,105 @@ namespace PLimit
         }
 
         /// <summary>
-        /// Refresh process list method.
+        /// Captures process state off the UI thread and then performs one short UI update.
         /// </summary>
-        private void RefreshProcessList()
+        private async Task RefreshProcessListAsync(bool showBusyState)
         {
-            this.Invoke(delegate
+            if (_isClosing)
+                return;
+
+            if (!await _refreshGate.WaitAsync(0))
             {
-                SaveListViewPosition();
-                var getProcesses = new ProcessesManage();
-                getProcesses.GetProcesses(ref processesListBox);
-                countProcessesLbl.Text = $"Processes running: {processesListBox.Items.Count}";
-                RestoreListViewPosition();
-            });
+                if (showBusyState)
+                    _refreshRequested = true;
+                return;
+            }
+
+            string originalButtonText = refreshProcessListBtn.Text;
+            try
+            {
+                do
+                {
+                    _refreshRequested = false;
+                    if (showBusyState)
+                    {
+                        refreshProcessListBtn.Enabled = false;
+                        refreshProcessListBtn.Text = "Refreshing...";
+                    }
+
+                    var manager = new ProcessesManage();
+                    var snapshots = await Task.Run(
+                        () => manager.CaptureProcesses(_refreshCancellation.Token),
+                        _refreshCancellation.Token);
+
+                    if (_isClosing || _refreshCancellation.IsCancellationRequested)
+                        return;
+
+                    _processSnapshots = snapshots;
+                    ApplyCurrentFilter();
+                }
+                while (_refreshRequested && !_isClosing);
+            }
+            catch (OperationCanceledException) when (_refreshCancellation.IsCancellationRequested)
+            {
+                // The form is closing.
+            }
+            catch (Exception ex)
+            {
+                countProcessesLbl.Text = $"Unable to refresh processes: {ex.Message}";
+            }
+            finally
+            {
+                if (!_isClosing && !refreshProcessListBtn.IsDisposed)
+                {
+                    refreshProcessListBtn.Enabled = true;
+                    refreshProcessListBtn.Text = originalButtonText;
+                }
+                _refreshGate.Release();
+            }
+        }
+
+        internal void RequestProcessRefresh()
+        {
+            if (_isClosing)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(RequestProcessRefresh);
+                return;
+            }
+
+            _refreshRequested = true;
+            _ = RefreshProcessListAsync(showBusyState: true);
+        }
+
+        private void ApplyCurrentFilter()
+        {
+            SaveListViewPosition();
+
+            string query = searchProcessTxt.Text.Trim();
+            var visibleProcesses = query.Length == 0
+                ? _processSnapshots
+                : _processSnapshots.Where(process => process.Matches(query)).ToArray();
+
+            var manager = new ProcessesManage();
+            manager.DisplayProcesses(processesListBox, visibleProcesses);
+            ResizeProcessColumns();
+
+            countProcessesLbl.Text = query.Length == 0
+                ? $"Processes running: {_processSnapshots.Count}"
+                : $"Showing {visibleProcesses.Count} of {_processSnapshots.Count} processes";
+
+            RestoreListViewPosition();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            _isClosing = true;
+            reloadProcess.Stop();
+            _refreshCancellation.Cancel();
+            base.OnFormClosing(e);
         }
 
         /// <summary>
@@ -242,8 +387,12 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void searchProcessTxt_TextChanged(object sender, EventArgs e) =>
-            searchProcessBtn.Enabled = (string.IsNullOrEmpty(searchProcessTxt.Text)) ? false : true;
+        private void searchProcessTxt_TextChanged(object sender, EventArgs e)
+        {
+            searchProcessBtn.Enabled = !string.IsNullOrWhiteSpace(searchProcessTxt.Text);
+            if (_processSnapshots.Count > 0)
+                ApplyCurrentFilter();
+        }
 
         /// <summary>
         /// Load context menu on right click event.
@@ -254,9 +403,13 @@ namespace PLimit
         {
             if (e.Button == MouseButtons.Right)
             {
-                var focusedItem = processesListBox.FocusedItem;
-                if (focusedItem != null)
-                    actionMenuStrip.Show(Cursor.Position);
+                var clickedItem = processesListBox.GetItemAt(e.X, e.Y);
+                if (clickedItem == null)
+                    return;
+
+                clickedItem.Selected = true;
+                clickedItem.Focused = true;
+                actionMenuStrip.Show(Cursor.Position);
             }
         }
 
@@ -442,26 +595,29 @@ namespace PLimit
             try { p = Process.GetProcessById(pid); }
             catch { return; }
 
-            afinityToolStripMenuItem.Tag = pid; // store PID for click handler
-
-            long mask = (long)p.ProcessorAffinity;     // bitmask
-            int coreCount = Environment.ProcessorCount; // how many logical CPU cores Windows reports
-
-            for (int core = 0; core < coreCount; core++)
+            using (p)
             {
-                bool isSet = (mask & (1L << core)) != 0;
+                afinityToolStripMenuItem.Tag = pid; // store PID for click handler
 
-                var coreItem = new ToolStripMenuItem($"Core {core}")
+                long mask = (long)p.ProcessorAffinity;     // bitmask
+                int coreCount = Math.Min(Environment.ProcessorCount, IntPtr.Size * 8);
+
+                for (int core = 0; core < coreCount; core++)
                 {
-                    CheckOnClick = true,
-                    Checked = isSet,
-                    Tag = core, // store core index
-                    BackColor = DarkTheme.Surface,
-                    ForeColor = DarkTheme.TextPrimary
-                };
+                    bool isSet = (mask & (1L << core)) != 0;
 
-                coreItem.Click += CoreToolStripMenuItem_Click;
-                afinityToolStripMenuItem.DropDownItems.Add(coreItem);
+                    var coreItem = new ToolStripMenuItem($"Core {core}")
+                    {
+                        CheckOnClick = true,
+                        Checked = isSet,
+                        Tag = core, // store core index
+                        BackColor = DarkTheme.Surface,
+                        ForeColor = DarkTheme.TextPrimary
+                    };
+
+                    coreItem.Click += CoreToolStripMenuItem_Click;
+                    afinityToolStripMenuItem.DropDownItems.Add(coreItem);
+                }
             }
         }
 
@@ -470,7 +626,7 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CoreToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CoreToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             var affinity = new Affinity();
             affinity.SetAffinity(this, processesListBox, afinityToolStripMenuItem, countProcessesLbl, searchProcessTxt, sender);
@@ -502,7 +658,7 @@ namespace PLimit
             {
                 case Keys.R:
                     if (!searchProcessTxt.Focused)
-                        RefreshProcessList();
+                        _ = RefreshProcessListAsync(showBusyState: true);
                     else
                         break;
                     return true;
@@ -515,70 +671,22 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void reloadProcess_Tick(object sender, EventArgs e)
+        private async void reloadProcess_Tick(object sender, EventArgs e)
         {
-            BeginInvoke(new Action(() =>
-            {
-                RefreshProcessList();
-                SearchProcess(false);
-            }));
+            if (_isPointerOverProcessList || actionMenuStrip.Visible || WindowState == FormWindowState.Minimized)
+                return;
+
+            await RefreshProcessListAsync(showBusyState: false);
         }
 
         /// <summary>
-        /// Stop reloading process list on mouse hover event.
+        /// Avoid replacing rows while the user is interacting with the process list.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void processesListBox_MouseHover(object sender, EventArgs e)
-        {
-            if (reloadProcess.Enabled)
-                reloadProcess.Stop();
-        }
+        private void processesListBox_MouseEnter(object sender, EventArgs e) =>
+            _isPointerOverProcessList = true;
 
-
-        /// <summary>
-        /// Start reloading process list on mouse hover event in WinForm.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MainForm_MouseHover(object sender, EventArgs e)
-        {
-            if (!reloadProcess.Enabled)
-                reloadProcess.Start();
-        }
-
-        /// <summary>
-        /// start reloading process list on mouse hover event in search box.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void searchProcessTxt_MouseHover(object sender, EventArgs e)
-        {
-            if (!reloadProcess.Enabled)
-                reloadProcess.Start();
-        }
-
-        /// <summary>
-        /// Start reloading process list on mouse hover event in search button.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void searchProcessBtn_MouseHover(object sender, EventArgs e)
-        {
-            if (!reloadProcess.Enabled)
-                reloadProcess.Start();
-        }
-
-        /// <summary>
-        /// Start reloading process list on mouse hover event in refresh button.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void refreshProcessListBtn_MouseHover(object sender, EventArgs e)
-        {
-            if (!reloadProcess.Enabled)
-                reloadProcess.Start();
-        }
+        private void processesListBox_MouseLeave(object sender, EventArgs e) =>
+            _isPointerOverProcessList = false;
 
         /// <summary>
         /// Handles the CheckedChanged event of checkBox1 by updating the application's loading settings preference.

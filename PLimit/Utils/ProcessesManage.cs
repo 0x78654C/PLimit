@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
@@ -7,6 +9,9 @@ namespace PLimit.Utils
 {
     internal class ProcessesManage
     {
+        private static readonly ConcurrentDictionary<string, string> UserNameCache =
+            new(StringComparer.OrdinalIgnoreCase);
+
         [DllImport("advapi32.dll", SetLastError = true)]
         static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
 
@@ -186,7 +191,7 @@ namespace PLimit.Utils
         /// <param name="priority"></param>
         public void SetIoPriorityAllThreads(int processId, IO_PRIORITY_HINT priority)
         {
-            var getProcess = Process.GetProcessById(processId);
+            using var getProcess = Process.GetProcessById(processId);
             foreach (ProcessThread thread in getProcess.Threads)
                 SetIoPriority(thread, priority);
         }
@@ -227,77 +232,167 @@ namespace PLimit.Utils
             }
         }
         /// <summary>
-        /// Add running processes to list box.
+        /// Captures process information without touching UI controls, allowing callers
+        /// to do the expensive work on a background thread.
         /// </summary>
-        /// <param name="listBox"></param>
-        public void GetProcesses(ref DoubleBufferedListView listView)
+        public IReadOnlyList<ProcessSnapshot> CaptureProcesses(CancellationToken cancellationToken = default)
         {
+            var snapshots = new List<ProcessSnapshot>();
+            var storedProcessNames = LoadStoredProcessNames();
+            var efficiency = new EfficiencyModeHelper();
+            var processes = Process.GetProcesses();
+
+            try
+            {
+                foreach (var process in processes)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    string processName;
+                    int processId;
+                    try
+                    {
+                        processName = process.ProcessName;
+                        processId = process.Id;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    string priority = "Unknown";
+                    int? cpuCount = null;
+                    string boost = "Unknown";
+                    string efficiencyMode = "Unknown";
+                    string user = "-";
+
+                    try { priority = process.PriorityClass.ToString(); } catch { }
+                    try { cpuCount = CountBits(process.ProcessorAffinity.ToInt64()); } catch { }
+
+                    try
+                    {
+                        IntPtr handle = process.Handle;
+                        if (GetProcessPriorityBoost(handle, out bool boostDisabled))
+                            boost = boostDisabled ? "Disabled" : "Enabled";
+
+                        try
+                        {
+                            efficiencyMode = efficiency.IsEfficiencyModeEnabled(handle)
+                                ? "Enabled"
+                                : "Disabled";
+                        }
+                        catch
+                        {
+                            efficiencyMode = "Unknown";
+                        }
+
+                        user = GetProcessUser(process);
+                    }
+                    catch
+                    {
+                        // Some protected processes expose only their name and PID.
+                    }
+
+                    var (ioPriority, threadBoost) = GetThreadStatus(process);
+                    snapshots.Add(new ProcessSnapshot(
+                        processName,
+                        processId,
+                        priority,
+                        cpuCount,
+                        ioPriority,
+                        boost,
+                        efficiencyMode,
+                        storedProcessNames.Contains(processName),
+                        threadBoost,
+                        user));
+                }
+            }
+            finally
+            {
+                foreach (var process in processes)
+                    process.Dispose();
+            }
+
+            snapshots.Sort((left, right) =>
+                string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            return snapshots;
+        }
+
+        /// <summary>
+        /// Replaces the visible process rows using a previously captured snapshot.
+        /// </summary>
+        public void DisplayProcesses(DoubleBufferedListView listView, IEnumerable<ProcessSnapshot> snapshots)
+        {
+            var items = snapshots.Select(snapshot => snapshot.ToListViewItem()).ToArray();
+
             listView.BeginUpdate();
             try
             {
                 listView.Items.Clear();
-
-                var processes = Process.GetProcesses();
-                foreach (var process in processes)
-                {
-                    var user = GetProcessUser(process);
-                    // if (user != Environment.UserName) continue;
-
-                    IntPtr handle = IntPtr.Zero;
-                    try
-                    {
-                        handle = process.Handle;
-
-                        bool disabled;
-                        GetProcessPriorityBoost(handle, out disabled);
-
-                        var cpus = CountBits(process.ProcessorAffinity.ToInt64());
-
-                        var io = "----";
-                        foreach (ProcessThread thread in process.Threads)
-                            io = GetIoPriority(thread).ToString();
-                        var efficency = new EfficiencyModeHelper();
-                        var efficiencyMode = "Disable";
-
-                        //Workaround for efficiency mode, since there is no official way to check if it's enabled or not, we will check if the priority class is set to Idle or BelowNormal, which are the only two options that enable efficiency mode
-                        efficiencyMode = (process.PriorityClass.ToString() == "Idle" || process.PriorityClass.ToString() == "BelowNormal") ? "Enabled" : "Disabled";
-                        // var efficiencyMode = efficency.IsEfficiencyModeEnabled(process.Id) ? "Enabled" : "Disabled";
-
-                        var dptb = GetThreadBoost(process.Id);
-
-                        var storedSetting = false;
-                        if (File.Exists(GlobalVars.LogFilePath))
-                        {
-                            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-                            storedSetting = settings.Any(s => s.ProcessName == process.ProcessName);
-                        }
-
-                        var item = new ListViewItem(new[]
-                        {
-                    process.ProcessName,
-                    process.Id.ToString(),
-                    process.PriorityClass.ToString(),
-                    cpus.ToString(),
-                    io,
-                    disabled.ToString(),
-                    efficiencyMode,
-                    storedSetting ? "Yes" : "No",
-                    dptb.HasValue ? (dptb.Value ? "Enabled" : "Disabled") : "Unknown",
-                    user
-                });
-
-                        listView.Items.Add(item);
-                    }
-                    catch
-                    {
-                        // process may exit / access denied etc. skip it
-                    }
-                }
+                listView.Items.AddRange(items);
+                listView.Sort();
             }
             finally
             {
                 listView.EndUpdate();
             }
+        }
+
+        /// <summary>
+        /// Synchronous compatibility path for callers that do not own an async UI flow.
+        /// </summary>
+        public void GetProcesses(ref DoubleBufferedListView listView) =>
+            DisplayProcesses(listView, CaptureProcesses());
+
+        private static HashSet<string> LoadStoredProcessNames()
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!File.Exists(GlobalVars.LogFilePath))
+                return names;
+
+            try
+            {
+                var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath);
+                foreach (var setting in settings)
+                {
+                    if (!string.IsNullOrWhiteSpace(setting.ProcessName))
+                        names.Add(setting.ProcessName);
+                }
+            }
+            catch
+            {
+                // A malformed or concurrently replaced settings file should not prevent
+                // the process list from loading. It can be retried on the next refresh.
+            }
+
+            return names;
+        }
+
+        private static (string IoPriority, string ThreadBoost) GetThreadStatus(Process process)
+        {
+            IO_PRIORITY_HINT? ioPriority = null;
+            bool? threadBoost = null;
+
+            try
+            {
+                foreach (ProcessThread thread in process.Threads)
+                {
+                    ioPriority ??= GetIoPriority(thread);
+                    threadBoost ??= GetThreadBoost(thread);
+
+                    if (ioPriority.HasValue && threadBoost.HasValue)
+                        break;
+                }
+            }
+            catch
+            {
+                // Access to process threads is best-effort.
+            }
+
+            return (
+                ioPriority?.ToString() ?? "Unknown",
+                threadBoost.HasValue ? threadBoost.Value ? "Enabled" : "Disabled" : "Unknown");
         }
 
 
@@ -310,7 +405,7 @@ namespace PLimit.Utils
         {
             try
             {
-                var getProcess = Process.GetProcessById(processId);
+                using var getProcess = Process.GetProcessById(processId);
                 getProcess.PriorityClass = priorityClass;
             }
             catch
@@ -328,9 +423,12 @@ namespace PLimit.Utils
         {
             try
             {
-                var getProcess = Process.GetProcessById(processId);
+                using var getProcess = Process.GetProcessById(processId);
                 IntPtr handle = getProcess.Handle;
-                SetProcessPriorityBoost(handle, isEnabled);
+                // The Win32 API accepts a "disable" flag, while the application API
+                // accepts an "enable" flag.
+                if (!SetProcessPriorityBoost(handle, !isEnabled))
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
             }
             catch
             {
@@ -347,26 +445,34 @@ namespace PLimit.Utils
         {
             try
             {
-                var process = Process.GetProcessById(processId);
+                using var process = Process.GetProcessById(processId);
                 foreach (ProcessThread thread in process.Threads)
                 {
-                    IntPtr hThread = OpenThread(0x0800 /* THREAD_QUERY_LIMITED_INFORMATION */, false, thread.Id);
-                    if (hThread == IntPtr.Zero) continue;
-                    try
-                    {
-                        if (GetThreadPriorityBoost(hThread, out bool disabled))
-                            return !disabled;
-                    }
-                    finally
-                    {
-                        CloseHandle(hThread);
-                    }
+                    var boost = GetThreadBoost(thread);
+                    if (boost.HasValue)
+                        return boost;
                 }
                 return null;
             }
             catch
             {
                 return null;
+            }
+        }
+
+        private static bool? GetThreadBoost(ProcessThread thread)
+        {
+            IntPtr hThread = OpenThread(0x0800 /* THREAD_QUERY_LIMITED_INFORMATION */, false, thread.Id);
+            if (hThread == IntPtr.Zero)
+                return null;
+
+            try
+            {
+                return GetThreadPriorityBoost(hThread, out bool disabled) ? !disabled : null;
+            }
+            finally
+            {
+                CloseHandle(hThread);
             }
         }
 
@@ -379,7 +485,7 @@ namespace PLimit.Utils
         {
             try
             {
-                var process = Process.GetProcessById(processId);
+                using var process = Process.GetProcessById(processId);
                 foreach (ProcessThread thread in process.Threads)
                 {
                     IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, thread.Id);
@@ -410,7 +516,11 @@ namespace PLimit.Utils
             ListViewItem? foundItem =
                 listView.FindItemWithText(searchString, true, 0, true);
             if (foundItem != null)
-                listView.TopItem = foundItem;
+            {
+                foundItem.Selected = true;
+                foundItem.Focused = true;
+                foundItem.EnsureVisible();
+            }
             else if (isMessage)
                 MessageBox.Show($"Process '{searchString}' was not found. Try refresh the list!", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
@@ -423,6 +533,7 @@ namespace PLimit.Utils
         private string GetProcessUser(Process process)
         {
             IntPtr tokenHandle = IntPtr.Zero;
+            IntPtr tokenInfo = IntPtr.Zero;
 
             try
             {
@@ -431,16 +542,28 @@ namespace PLimit.Utils
 
                 int tokenInfoLength = 0;
                 GetTokenInformation(tokenHandle, TokenUser, IntPtr.Zero, 0, out tokenInfoLength);
-                IntPtr tokenInfo = Marshal.AllocHGlobal(tokenInfoLength);
+                if (tokenInfoLength <= 0)
+                    return "-";
+
+                tokenInfo = Marshal.AllocHGlobal(tokenInfoLength);
 
                 if (!GetTokenInformation(tokenHandle, TokenUser, tokenInfo, tokenInfoLength, out _))
                     return "-";
 
                 var sid = Marshal.ReadIntPtr(tokenInfo);
                 var account = new SecurityIdentifier(sid);
-                string fullName = account.Translate(typeof(NTAccount)).ToString();
-
-                Marshal.FreeHGlobal(tokenInfo);
+                string sidValue = account.Value;
+                string fullName = UserNameCache.GetOrAdd(sidValue, _ =>
+                {
+                    try
+                    {
+                        return account.Translate(typeof(NTAccount)).ToString();
+                    }
+                    catch
+                    {
+                        return sidValue;
+                    }
+                });
 
                 // Strip domain or machine name
                 int slashIndex = fullName.IndexOf('\\');
@@ -452,6 +575,8 @@ namespace PLimit.Utils
             }
             finally
             {
+                if (tokenInfo != IntPtr.Zero)
+                    Marshal.FreeHGlobal(tokenInfo);
                 if (tokenHandle != IntPtr.Zero)
                     CloseHandle(tokenHandle);
             }
@@ -464,15 +589,7 @@ namespace PLimit.Utils
         /// <param name="value"></param>
         /// <returns></returns>
         public int CountBits(long value)
-        {
-            int count = 0;
-            while (value != 0)
-            {
-                count += (int)(value & 1);
-                value >>= 1;
-            }
-            return count;
-        }
+            => BitOperations.PopCount(unchecked((ulong)value));
 
         /// <summary>
         /// 
@@ -484,16 +601,36 @@ namespace PLimit.Utils
         /// <param name="pid"></param>
         public void KillProcess(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "")
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var getProcess = Process.GetProcessById(int.Parse(processId));
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(processId))
+            if (string.IsNullOrEmpty(pid) && processesListBox.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("Select a process first.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string processId = string.IsNullOrEmpty(pid)
+                ? processesListBox.SelectedItems[0].SubItems[1].Text
+                : pid;
+
+            if (!int.TryParse(processId, out int parsedProcessId) || !IsPidValid(processId))
             {
                 MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
+            string processName = string.IsNullOrEmpty(pid)
+                ? processesListBox.SelectedItems[0].SubItems[0].Text
+                : processId;
+            if (MessageBox.Show(
+                    $"Terminate {processName} (PID {processId})?",
+                    "Confirm process termination",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                return;
+
             try
             {
+                using var getProcess = Process.GetProcessById(parsedProcessId);
                 getProcess.Kill();
             }
             catch
@@ -520,7 +657,7 @@ namespace PLimit.Utils
                 return false;
             try
             {
-                Process.GetProcessById(processId);
+                using var process = Process.GetProcessById(processId);
                 return true;
             }
             catch

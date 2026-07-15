@@ -46,6 +46,8 @@ namespace PLimit.Utils
         // ── State ─────────────────────────────────────────────────────────
         private readonly int _coreCount;
         private readonly float[] _cpuValues;
+        private readonly int _processorInfoSize;
+        private readonly IntPtr _cpuBuffer;
 
         private long[] _prevKernel;
         private long[] _prevUser;
@@ -56,6 +58,18 @@ namespace PLimit.Utils
         private ulong _totalMemMb;
 
         private readonly System.Windows.Forms.Timer _timer;
+        private readonly Font _labelFont = new("Segoe UI", 6.8f);
+        private readonly Font _headerFont = new("Segoe UI", 7f, FontStyle.Bold);
+        private readonly Font _percentageFont = new("Segoe UI", 6.5f);
+        private readonly SolidBrush _barBackgroundBrush = new(BarBg);
+        private readonly SolidBrush _textBrush = new(TextColor);
+        private readonly SolidBrush _sectionBrush = new(SectionColor);
+        private readonly SolidBrush _cpuNormalBrush = new(CpuBarNormal);
+        private readonly SolidBrush _cpuHighBrush = new(CpuBarHigh);
+        private readonly SolidBrush _ramNormalBrush = new(RamBarNormal);
+        private readonly SolidBrush _ramHighBrush = new(RamBarHigh);
+        private readonly SolidBrush _whiteBrush = new(Color.White);
+        private bool _resourcesDisposed;
 
         // ── Theme ─────────────────────────────────────────────────────────
         private static readonly Color PanelBack    = Color.FromArgb(22, 22, 22);
@@ -74,6 +88,8 @@ namespace PLimit.Utils
             _prevKernel = new long[_coreCount];
             _prevUser   = new long[_coreCount];
             _prevIdle   = new long[_coreCount];
+            _processorInfoSize = Marshal.SizeOf<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>();
+            _cpuBuffer = Marshal.AllocHGlobal(_processorInfoSize * _coreCount);
 
             BackColor = PanelBack;
             SetStyle(
@@ -94,40 +110,34 @@ namespace PLimit.Utils
 
         private void SampleCpu(bool prime = false)
         {
-            int structSize = Marshal.SizeOf<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>();
-            int bufSize    = structSize * _coreCount;
-            IntPtr buf     = Marshal.AllocHGlobal(bufSize);
+            int bufferSize = _processorInfoSize * _coreCount;
+            if (NtQuerySystemInformation(
+                    SystemProcessorPerformanceInformation,
+                    _cpuBuffer,
+                    bufferSize,
+                    out _) != 0)
+                return;
 
-            try
+            for (int i = 0; i < _coreCount; i++)
             {
-                if (NtQuerySystemInformation(SystemProcessorPerformanceInformation, buf, bufSize, out _) != 0)
-                    return;
+                var info = Marshal.PtrToStructure<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>(
+                    _cpuBuffer + i * _processorInfoSize);
 
-                for (int i = 0; i < _coreCount; i++)
+                if (!prime)
                 {
-                    var info = Marshal.PtrToStructure<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>(
-                        buf + i * structSize);
+                    long kernelDelta = info.KernelTime - _prevKernel[i];
+                    long userDelta   = info.UserTime   - _prevUser[i];
+                    long idleDelta   = info.IdleTime   - _prevIdle[i];
+                    long totalDelta  = kernelDelta + userDelta;
 
-                    if (!prime)
-                    {
-                        long kernelDelta = info.KernelTime - _prevKernel[i];
-                        long userDelta   = info.UserTime   - _prevUser[i];
-                        long idleDelta   = info.IdleTime   - _prevIdle[i];
-                        long totalDelta  = kernelDelta + userDelta;
-
-                        _cpuValues[i] = totalDelta > 0
-                            ? Math.Clamp((1f - (float)idleDelta / totalDelta) * 100f, 0, 100)
-                            : 0;
-                    }
-
-                    _prevKernel[i] = info.KernelTime;
-                    _prevUser[i]   = info.UserTime;
-                    _prevIdle[i]   = info.IdleTime;
+                    _cpuValues[i] = totalDelta > 0
+                        ? Math.Clamp((1f - (float)idleDelta / totalDelta) * 100f, 0, 100)
+                        : 0;
                 }
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(buf);
+
+                _prevKernel[i] = info.KernelTime;
+                _prevUser[i]   = info.UserTime;
+                _prevIdle[i]   = info.IdleTime;
             }
         }
 
@@ -156,25 +166,17 @@ namespace PLimit.Utils
             const int labelH     = 14;   // height reserved for bottom labels
             const int headerH    = 14;   // height reserved for top section labels
 
-            using var labelFont  = new Font("Segoe UI", 6.8f);
-            using var headerFont = new Font("Segoe UI", 7f, FontStyle.Bold);
-            using var pctFont    = new Font("Segoe UI", 6.5f);
-
             int totalItems = _coreCount + 1; // cores + 1 RAM bar
             int availW     = Width - padX * 2 - sectionGap;
             int barW       = Math.Max(6, (availW - gap * (totalItems - 1)) / totalItems);
             int barH       = Height - padY * 2 - headerH - labelH;
             int barTop     = padY + headerH;
 
-            using var barBgBrush = new SolidBrush(BarBg);
-            using var textBrush  = new SolidBrush(TextColor);
-            using var sectBrush  = new SolidBrush(SectionColor);
-
             // ── Section headers ──────────────────────────────────────────
-            g.DrawString("CPU Cores", headerFont, sectBrush, padX, padY);
+            g.DrawString("CPU Cores", _headerFont, _sectionBrush, padX, padY);
 
             int ramBarX = padX + _coreCount * (barW + gap) + sectionGap;
-            g.DrawString("RAM", headerFont, sectBrush, ramBarX, padY);
+            g.DrawString("RAM", _headerFont, _sectionBrush, ramBarX, padY);
 
             // ── CPU bars ─────────────────────────────────────────────────
             for (int i = 0; i < _coreCount; i++)
@@ -183,28 +185,27 @@ namespace PLimit.Utils
                 float pct = _cpuValues[i] / 100f;
                 int fillH = (int)(barH * pct);
 
-                g.FillRectangle(barBgBrush, x, barTop, barW, barH);
+                g.FillRectangle(_barBackgroundBrush, x, barTop, barW, barH);
 
                 if (fillH > 0)
                 {
-                    using var fill = new SolidBrush(pct >= 0.9f ? CpuBarHigh : CpuBarNormal);
+                    var fill = pct >= 0.9f ? _cpuHighBrush : _cpuNormalBrush;
                     g.FillRectangle(fill, x, barTop + barH - fillH, barW, fillH);
                 }
 
                 // Percentage overlay (top of bar)
                 string pctStr = $"{_cpuValues[i]:F0}%";
-                var pctSz = g.MeasureString(pctStr, pctFont);
+                var pctSz = g.MeasureString(pctStr, _percentageFont);
                 if (pctSz.Width <= barW + 2)
                 {
-                    using var whiteBrush = new SolidBrush(Color.White);
-                    g.DrawString(pctStr, pctFont, whiteBrush,
+                    g.DrawString(pctStr, _percentageFont, _whiteBrush,
                         x + (barW - pctSz.Width) / 2f, barTop + 2);
                 }
 
                 // Core index label (below bar)
                 string coreLabel = i.ToString();
-                var cSz = g.MeasureString(coreLabel, labelFont);
-                g.DrawString(coreLabel, labelFont, textBrush,
+                var cSz = g.MeasureString(coreLabel, _labelFont);
+                g.DrawString(coreLabel, _labelFont, _textBrush,
                     x + (barW - cSz.Width) / 2f, barTop + barH + 2);
             }
 
@@ -212,21 +213,20 @@ namespace PLimit.Utils
             float memPct  = _memLoadPct / 100f;
             int   memFillH = (int)(barH * memPct);
 
-            g.FillRectangle(barBgBrush, ramBarX, barTop, barW, barH);
+            g.FillRectangle(_barBackgroundBrush, ramBarX, barTop, barW, barH);
 
             if (memFillH > 0)
             {
-                using var fill = new SolidBrush(memPct >= 0.85f ? RamBarHigh : RamBarNormal);
+                var fill = memPct >= 0.85f ? _ramHighBrush : _ramNormalBrush;
                 g.FillRectangle(fill, ramBarX, barTop + barH - memFillH, barW, memFillH);
             }
 
             // Percentage overlay
             string memPctStr = $"{_memLoadPct:F0}%";
-            var mPctSz = g.MeasureString(memPctStr, pctFont);
+            var mPctSz = g.MeasureString(memPctStr, _percentageFont);
             if (mPctSz.Width <= barW + 2)
             {
-                using var whiteBrush = new SolidBrush(Color.White);
-                g.DrawString(memPctStr, pctFont, whiteBrush,
+                g.DrawString(memPctStr, _percentageFont, _whiteBrush,
                     ramBarX + (barW - mPctSz.Width) / 2f, barTop + 2);
             }
 
@@ -234,15 +234,28 @@ namespace PLimit.Utils
             string memLabel = _totalMemMb >= 1024
                 ? $"{_usedMemMb / 1024.0:F1}/{_totalMemMb / 1024.0:F0}GB"
                 : $"{_usedMemMb}/{_totalMemMb}MB";
-            g.DrawString(memLabel, labelFont, textBrush, ramBarX, barTop + barH + 2);
+            g.DrawString(memLabel, _labelFont, _textBrush, ramBarX, barTop + barH + 2);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !_resourcesDisposed)
             {
+                _resourcesDisposed = true;
                 _timer.Stop();
                 _timer.Dispose();
+                Marshal.FreeHGlobal(_cpuBuffer);
+                _labelFont.Dispose();
+                _headerFont.Dispose();
+                _percentageFont.Dispose();
+                _barBackgroundBrush.Dispose();
+                _textBrush.Dispose();
+                _sectionBrush.Dispose();
+                _cpuNormalBrush.Dispose();
+                _cpuHighBrush.Dispose();
+                _ramNormalBrush.Dispose();
+                _ramHighBrush.Dispose();
+                _whiteBrush.Dispose();
             }
             base.Dispose(disposing);
         }

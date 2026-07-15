@@ -23,6 +23,12 @@ namespace PLimit.Utils
         /// </summary>
         public void RefreshProcessList(Form form, DoubleBufferedListView processesListBox, Label countProcessesLbl)
         {
+            if (form is MainForm mainForm)
+            {
+                mainForm.RequestProcessRefresh();
+                return;
+            }
+
             form.Invoke(delegate
             {
                 SaveListViewPosition(processesListBox);
@@ -67,7 +73,7 @@ namespace PLimit.Utils
             if (_lastPid.HasValue)
             {
                 string pidText = _lastPid.Value.ToString();
-                ListViewItem found = null;
+                ListViewItem? found = null;
 
                 foreach (ListViewItem it in processesListBox.Items)
                 {
