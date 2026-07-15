@@ -9,6 +9,8 @@ namespace PLimit.Json
 {
     public static class JsonManage
     {
+        private static readonly object FileLock = new();
+
         /// <summary>
         /// Read data from JSON file.
         /// </summary>
@@ -17,7 +19,11 @@ namespace PLimit.Json
         /// <returns></returns>
         public static T ReadJsonFromFile<T>(string filePath)
         {
-            return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
+            lock (FileLock)
+            {
+                return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath))
+                    ?? throw new InvalidDataException($"The JSON file '{filePath}' did not contain a value.");
+            }
         }
 
         /// <summary>
@@ -27,7 +33,8 @@ namespace PLimit.Json
         /// <param name="ob"></param>
         public static void CreateJsonFile(string filePath, object ob)
         {
-            File.WriteAllText(filePath, JsonSerializer.Serialize(ob));
+            lock (FileLock)
+                File.WriteAllText(filePath, JsonSerializer.Serialize(ob));
         }
 
         /// <summary>
@@ -38,39 +45,45 @@ namespace PLimit.Json
         /// <param name="ToAdd"></param>
         public static void UpdateJsonFile<T>(string filePath, T ToAdd)
         {
-            if (!File.Exists(filePath))
+            lock (FileLock)
             {
-                CreateJsonFile(filePath, new[] { ToAdd });
-                return;
+                if (!File.Exists(filePath))
+                {
+                    CreateJsonFile(filePath, new[] { ToAdd });
+                    return;
+                }
+                var json = ReadJsonFromFile<T[]>(filePath).ToList();
+                json.Add(ToAdd);
+                CreateJsonFile(filePath, json.ToArray());
             }
-            var json = ReadJsonFromFile<T[]>(filePath).ToList();
-            json.Add(ToAdd);
-            CreateJsonFile(filePath, json.ToArray());
         }
 
 
         public static void UpdateJsonFileParameter<T>(string filePath, Action<T> updateAction) where T : new()
         {
-            T data;
-
-            if (!File.Exists(filePath))
+            lock (FileLock)
             {
-                data = new T();
+                T data;
+
+                if (!File.Exists(filePath))
+                {
+                    data = new T();
+                }
+                else
+                {
+                    var json = File.ReadAllText(filePath);
+                    data = string.IsNullOrWhiteSpace(json)
+                        ? new T()
+                        : JsonSerializer.Deserialize<T>(json) ?? new T();
+                }
+
+                updateAction(data);
+
+                File.WriteAllText(filePath, JsonSerializer.Serialize(data, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                }));
             }
-            else
-            {
-                var json = File.ReadAllText(filePath);
-                data = string.IsNullOrWhiteSpace(json)
-                    ? new T()
-                    : JsonSerializer.Deserialize<T>(json) ?? new T();
-            }
-
-            updateAction(data);
-
-            File.WriteAllText(filePath, JsonSerializer.Serialize(data, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
         }
 
         /// <summary>
@@ -81,10 +94,13 @@ namespace PLimit.Json
         /// <param name="toRemove"></param>
         public static void DeleteJsonData<T>(string filePath, Func<IEnumerable<T>, IEnumerable<T>> toRemove)
         {
-            if (!File.Exists(filePath)) { return; }
-            var json = ReadJsonFromFile<T[]>(filePath).ToList();
-            json = json.Except(toRemove(json)).ToList();
-            CreateJsonFile(filePath, json.ToArray());
+            lock (FileLock)
+            {
+                if (!File.Exists(filePath)) { return; }
+                var json = ReadJsonFromFile<T[]>(filePath).ToList();
+                json = json.Except(toRemove(json)).ToList();
+                CreateJsonFile(filePath, json.ToArray());
+            }
         }
     }
 }

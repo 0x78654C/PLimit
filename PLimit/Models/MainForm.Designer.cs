@@ -106,7 +106,8 @@
             processesListBox.UseCompatibleStateImageBehavior = false;
             processesListBox.View = View.Details;
             processesListBox.MouseClick += processesListBox_MouseClick;
-            processesListBox.MouseHover += processesListBox_MouseHover;
+            processesListBox.MouseEnter += processesListBox_MouseEnter;
+            processesListBox.MouseLeave += processesListBox_MouseLeave;
             // 
             // processName
             // 
@@ -125,7 +126,7 @@
             // 
             // afinity
             // 
-            afinity.Text = "Afinity";
+            afinity.Text = "Affinity";
             afinity.Width = 120;
             // 
             // ioPriority
@@ -135,8 +136,8 @@
             // 
             // boost
             // 
-            boost.Text = "Boost";
-            boost.Width = 90;
+            boost.Text = "Priority Boost";
+            boost.Width = 105;
             // 
             // efficiencyMode
             // 
@@ -172,7 +173,6 @@
             searchProcessBtn.Text = "Search";
             searchProcessBtn.UseVisualStyleBackColor = true;
             searchProcessBtn.Click += searchProcessBtn_Click;
-            searchProcessBtn.MouseHover += searchProcessBtn_MouseHover;
             // 
             // searchProcessTxt
             // 
@@ -184,7 +184,6 @@
             searchProcessTxt.TextAlign = HorizontalAlignment.Center;
             searchProcessTxt.TextChanged += searchProcessTxt_TextChanged;
             searchProcessTxt.KeyDown += searchProcessTxt_KeyDown;
-            searchProcessTxt.MouseHover += searchProcessTxt_MouseHover;
             // 
             // refreshProcessListBtn
             // 
@@ -196,7 +195,6 @@
             refreshProcessListBtn.Text = "Refresh List (R)";
             refreshProcessListBtn.UseVisualStyleBackColor = true;
             refreshProcessListBtn.Click += refreshProcessListBtn_Click;
-            refreshProcessListBtn.MouseHover += refreshProcessListBtn_MouseHover;
             // 
             // actionMenuStrip
             // 
@@ -209,7 +207,7 @@
             boostToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { enableToolStripMenuItem, disableToolStripMenuItem });
             boostToolStripMenuItem.Name = "boostToolStripMenuItem";
             boostToolStripMenuItem.Size = new Size(333, 22);
-            boostToolStripMenuItem.Text = "Boost";
+            boostToolStripMenuItem.Text = "Process Priority Boost";
             // 
             // enableToolStripMenuItem
             // 
@@ -327,7 +325,7 @@
             // 
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
             afinityToolStripMenuItem.Size = new Size(333, 22);
-            afinityToolStripMenuItem.Text = "CPU Afinity";
+            afinityToolStripMenuItem.Text = "CPU Affinity";
             afinityToolStripMenuItem.MouseHover += afinityToolStripMenuItem_MouseHover;
             // 
             // efficiencyModeToolStripMenuItem
@@ -386,7 +384,7 @@
             // reloadProcess
             // 
             reloadProcess.Enabled = true;
-            reloadProcess.Interval = 1100;
+            reloadProcess.Interval = 3000;
             reloadProcess.Tick += reloadProcess_Tick;
             // 
             // countProcessesLbl
@@ -454,14 +452,15 @@
             Controls.Add(refreshProcessListBtn);
             Controls.Add(systemMonitorPanel);
             Controls.Add(processesListBox);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.Sizable;
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MaximizeBox = false;
+            MaximizeBox = true;
+            MinimumSize = new Size(900, 500);
             Name = "MainForm";
+            SizeGripStyle = SizeGripStyle.Show;
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Process Limiter";
             Load += MainForm_Load;
-            MouseHover += MainForm_MouseHover;
             Resize += MainForm_Resize;
             actionMenuStrip.ResumeLayout(false);
             ResumeLayout(false);

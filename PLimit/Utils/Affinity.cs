@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Security.Cryptography;
 
 namespace PLimit.Utils
 {
@@ -19,7 +18,7 @@ namespace PLimit.Utils
         /// <param name="label"></param>
         /// <param name="searchBox"></param>
         /// <param name="sender"></param>
-        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem afinityToolStripMenuItem, Label label, TextBox searchBox, object sender, string mask = "", string pidId = "", bool isStartUp = false)
+        public void SetAffinity(Form from, DoubleBufferedListView processesListBox, ToolStripMenuItem? afinityToolStripMenuItem, Label label, TextBox searchBox, object? sender, string mask = "", string pidId = "", bool isStartUp = false)
         {
             int pid;
             if (!string.IsNullOrWhiteSpace(pidId))
@@ -29,7 +28,7 @@ namespace PLimit.Utils
             }
             else
             {
-                if (!int.TryParse(afinityToolStripMenuItem.Tag?.ToString(), out pid))
+                if (!int.TryParse(afinityToolStripMenuItem?.Tag?.ToString(), out pid))
                     return;
             }
             var processManage = new ProcessesManage();
@@ -43,48 +42,48 @@ namespace PLimit.Utils
             try { p = Process.GetProcessById(pid); }
             catch { return; }
 
-            long newMask = 0;
-            if (string.IsNullOrEmpty(pidId))
+            using (p)
             {
-                foreach (ToolStripItem tsi in afinityToolStripMenuItem.DropDownItems)
+                long newMask = 0;
+                if (string.IsNullOrEmpty(pidId))
                 {
-                    if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
-                        newMask |= (1L << core);
-                }
+                    foreach (ToolStripItem tsi in afinityToolStripMenuItem!.DropDownItems)
+                    {
+                        if (tsi is ToolStripMenuItem mi && mi.Tag is int core && mi.Checked)
+                            newMask |= (1L << core);
+                    }
 
-                // must keep at least 1 core enabled
-                if (newMask == 0)
-                {
-                    if (sender is ToolStripMenuItem clicked)
-                        clicked.Checked = true;
-                    return;
+                    // must keep at least 1 core enabled
+                    if (newMask == 0)
+                    {
+                        if (sender is ToolStripMenuItem clicked)
+                            clicked.Checked = true;
+                        return;
+                    }
                 }
-            }
-            if (!string.IsNullOrEmpty(mask))
-                newMask = Convert.ToInt64(mask);
-            try
-            {
-                p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
-            }
-            catch
-            {
-                // access denied / process exited / 32-bit limitations / etc.
-                // Optional: MessageBox.Show("Couldn't change affinity.");
-            }
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
+                if (!string.IsNullOrEmpty(mask))
+                    newMask = Convert.ToInt64(mask);
+                try
                 {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(mask))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
+                    p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
+                }
+                catch
                 {
-                    var storeAffinity = new StoreSettings(); ;
+                    // access denied / process exited / 32-bit limitations / etc.
+                    // Optional: MessageBox.Show("Couldn't change affinity.");
+                }
+                if (!isStartUp)
+                {
+                    from.BeginInvoke(new Action(() =>
+                    {
+                        var utils = new Utils();
+                        utils.RefreshProcessList(from, processesListBox, label);
+                        utils.SearchProcess(searchBox, processesListBox);
+                    }));
+                }
+                if (string.IsNullOrEmpty(mask) && Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeAffinity = new StoreSettings();
                     storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
                 }
             }

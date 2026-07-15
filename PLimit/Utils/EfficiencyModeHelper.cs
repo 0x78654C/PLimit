@@ -146,39 +146,37 @@ namespace PLimit.Utils
 
             try
             {
-                uint priorityClass = GetPriorityClass(hProc);
-                if (priorityClass == 0)
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-
-                bool lowPrio =
-                    priorityClass == IDLE_PRIORITY_CLASS ||
-                    priorityClass == BELOW_NORMAL_PRIORITY_CLASS;
-
-                bool gotInfo = GetProcessInformation(
-                    hProc,
-                    PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
-                    out var state,
-                    (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
-
-                if (!gotInfo)
-                {
-                    int err = Marshal.GetLastWin32Error();
-
-                    // Optional: log this instead of throwing if you want "false" on unsupported systems
-                    // throw new Win32Exception(err);
-
-                    return false;
-                }
-
-                bool ecoQosEnabled =
-                    (state.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED) != 0;
-
-                return lowPrio && ecoQosEnabled;
+                return IsEfficiencyModeEnabled(hProc);
             }
             finally
             {
                 CloseHandle(hProc);
             }
+        }
+
+        internal bool IsEfficiencyModeEnabled(IntPtr processHandle)
+        {
+            uint priorityClass = GetPriorityClass(processHandle);
+            if (priorityClass == 0)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+
+            bool lowPriority =
+                priorityClass == IDLE_PRIORITY_CLASS ||
+                priorityClass == BELOW_NORMAL_PRIORITY_CLASS;
+
+            bool gotInfo = GetProcessInformation(
+                processHandle,
+                PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
+                out var state,
+                (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
+
+            if (!gotInfo)
+                return false;
+
+            bool ecoQosEnabled =
+                (state.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED) != 0;
+
+            return lowPriority && ecoQosEnabled;
         }
     }
 }

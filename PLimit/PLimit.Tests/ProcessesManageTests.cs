@@ -34,6 +34,14 @@ public class ProcessesManageTests
         // long.MaxValue = 0x7FFF_FFFF_FFFF_FFFF  (63 ones, sign bit is 0)
         Assert.Equal(63, _sut.CountBits(long.MaxValue));
 
+    [Fact]
+    public void CountBits_SignBit_ReturnsOne() =>
+        Assert.Equal(1, _sut.CountBits(long.MinValue));
+
+    [Fact]
+    public void CountBits_AllBitsSet_Returns64() =>
+        Assert.Equal(64, _sut.CountBits(-1));
+
     [Theory]
     [InlineData(0b0001,       1)]
     [InlineData(0b0011,       2)]

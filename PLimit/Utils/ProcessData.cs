@@ -2,15 +2,15 @@
 {
     public class ProcessData
     {
-        public string ProcessName { get; set; }
-        public string Boosted { get; set; }
+        public string ProcessName { get; set; } = string.Empty;
+        public string Boosted { get; set; } = string.Empty;
 
-        public string IOProperty { get; set; }
-        public string Property { get; set; }
-        public string Affinity { get; set; }
-        public string Efficiency { get; set; }
-        public string Wdptb { get; set; }
-        public override bool Equals(object obj)
+        public string IOProperty { get; set; } = string.Empty;
+        public string Property { get; set; } = string.Empty;
+        public string Affinity { get; set; } = string.Empty;
+        public string Efficiency { get; set; } = string.Empty;
+        public string Wdptb { get; set; } = string.Empty;
+        public override bool Equals(object? obj)
         {
             return obj is ProcessData details &&
                    ProcessName == details.ProcessName &&

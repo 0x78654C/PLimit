@@ -186,4 +186,18 @@ public class JsonManageTests : IDisposable
         var result = JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
         Assert.Equal("True", result[0].Boosted);
     }
+
+    [Fact]
+    public void UpdateJsonFileParameter_ConcurrentUpdates_DoNotLoseData()
+    {
+        File.WriteAllText(_tempFile, "[]");
+
+        Parallel.For(0, 20, index =>
+            JsonManage.UpdateJsonFileParameter<List<ProcessData>>(_tempFile, data =>
+                data.Add(new ProcessData { ProcessName = $"proc{index}" })));
+
+        var result = JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
+        Assert.Equal(20, result.Count);
+        Assert.Equal(20, result.Select(process => process.ProcessName).Distinct().Count());
+    }
 }

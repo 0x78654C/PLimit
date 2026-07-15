@@ -3,6 +3,9 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -17,7 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\Downloads\logo1.png">
+    <None Include="..\logo1.png">
+      <Link>logo1.png</Link>
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
