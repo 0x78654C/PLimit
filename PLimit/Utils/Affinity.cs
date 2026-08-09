@@ -31,16 +31,18 @@ namespace PLimit.Utils
                 if (!int.TryParse(afinityToolStripMenuItem?.Tag?.ToString(), out pid))
                     return;
             }
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(pid.ToString()))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
 
             Process p;
-            try { p = Process.GetProcessById(pid); }
-            catch { return; }
+            try
+            {
+                p = Process.GetProcessById(pid);
+            }
+            catch
+            {
+                if (!isStartUp)
+                    MessageBox.Show("The process is no longer running. Refresh the process list.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             using (p)
             {
@@ -61,17 +63,29 @@ namespace PLimit.Utils
                         return;
                     }
                 }
-                if (!string.IsNullOrEmpty(mask))
-                    newMask = Convert.ToInt64(mask);
+                if (!string.IsNullOrEmpty(mask) &&
+                    (!long.TryParse(mask, out newMask) || newMask == 0))
+                {
+                    return;
+                }
+
                 try
                 {
                     p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
                 }
                 catch
                 {
-                    // access denied / process exited / 32-bit limitations / etc.
-                    // Optional: MessageBox.Show("Couldn't change affinity.");
+                    if (!isStartUp)
+                        MessageBox.Show("Failed to change processor affinity! Try running the application as administrator.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                if (string.IsNullOrEmpty(pidId) && Properties.Settings.Default.isSaveingSettings)
+                {
+                    var storeAffinity = new StoreSettings();
+                    storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
+                }
+
                 if (!isStartUp)
                 {
                     from.BeginInvoke(new Action(() =>
@@ -80,11 +94,6 @@ namespace PLimit.Utils
                         utils.RefreshProcessList(from, processesListBox, label);
                         utils.SearchProcess(searchBox, processesListBox);
                     }));
-                }
-                if (string.IsNullOrEmpty(mask) && Properties.Settings.Default.isSaveingSettings)
-                {
-                    var storeAffinity = new StoreSettings();
-                    storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
                 }
             }
         }

@@ -14,29 +14,40 @@
         /// <param name="jsonFilePath"></param>
         public void DeleteSettingsApp(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string jsonFilePath)
         {
+            if (processesListBox.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("Select a process first.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string processName = processesListBox.SelectedItems[0].SubItems[0].Text;
+            bool removed = false;
             try
             {
                 if (!File.Exists(jsonFilePath))
+                {
+                    MessageBox.Show("No process settings have been saved yet.", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
+                }
+
                 Json.JsonManage.UpdateJsonFileParameter<List<ProcessData>>(jsonFilePath, data =>
                 {
-                    if (data == null)
-                        return;
-                    var processData = data.FirstOrDefault(d => d.ProcessName == processesListBox.SelectedItems[0].SubItems[0].Text);
-                    if (processData != null)
-                    {
-                        data.Remove(processData);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Selected process not found in settings: {processesListBox.SelectedItems[0].SubItems[0].Text}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    removed = data.RemoveAll(item =>
+                        item == null || string.Equals(item.ProcessName, processName, StringComparison.OrdinalIgnoreCase)) > 0;
                 });
+
+                if (!removed)
+                {
+                    MessageBox.Show($"There are no settings saved for: {processName}", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while deleting the settings: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unable to delete the saved settings: {ex.Message}", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
+
             from.BeginInvoke(new Action(() =>
             {
                 var utils = new Utils();

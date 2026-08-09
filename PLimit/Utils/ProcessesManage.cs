@@ -189,11 +189,20 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="processId"></param>
         /// <param name="priority"></param>
-        public void SetIoPriorityAllThreads(int processId, IO_PRIORITY_HINT priority)
+        public bool SetIoPriorityAllThreads(int processId, IO_PRIORITY_HINT priority)
         {
-            using var getProcess = Process.GetProcessById(processId);
-            foreach (ProcessThread thread in getProcess.Threads)
-                SetIoPriority(thread, priority);
+            try
+            {
+                using var getProcess = Process.GetProcessById(processId);
+                bool updatedAnyThread = false;
+                foreach (ProcessThread thread in getProcess.Threads)
+                    updatedAnyThread |= SetIoPriority(thread, priority);
+                return updatedAnyThread;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -356,7 +365,7 @@ namespace PLimit.Utils
                 var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath);
                 foreach (var setting in settings)
                 {
-                    if (!string.IsNullOrWhiteSpace(setting.ProcessName))
+                    if (setting != null && !string.IsNullOrWhiteSpace(setting.ProcessName))
                         names.Add(setting.ProcessName);
                 }
             }
@@ -401,16 +410,18 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="priorityClass"></param>
         /// <param name="processId"></param>
-        public void SetPriorityClass(ProcessPriorityClass priorityClass, int processId)
+        public bool SetPriorityClass(ProcessPriorityClass priorityClass, int processId)
         {
             try
             {
                 using var getProcess = Process.GetProcessById(processId);
                 getProcess.PriorityClass = priorityClass;
+                return true;
             }
             catch
             {
                 MessageBox.Show("Failed to set priority class! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 
@@ -419,7 +430,7 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="isEnabled"></param>
         /// <param name="processId"></param>
-        public void SetBoost(bool isEnabled, int processId)
+        public bool SetBoost(bool isEnabled, int processId)
         {
             try
             {
@@ -429,10 +440,12 @@ namespace PLimit.Utils
                 // accepts an "enable" flag.
                 if (!SetProcessPriorityBoost(handle, !isEnabled))
                     throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                return true;
             }
             catch
             {
                 MessageBox.Show("Failed to set priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 
@@ -481,29 +494,36 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="enable"></param>
         /// <param name="processId"></param>
-        public void SetThreadBoost(bool enable, int processId)
+        public bool SetThreadBoost(bool enable, int processId)
         {
             try
             {
                 using var process = Process.GetProcessById(processId);
+                bool updatedAnyThread = false;
                 foreach (ProcessThread thread in process.Threads)
                 {
                     IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, thread.Id);
                     if (hThread == IntPtr.Zero) continue;
                     try
                     {
-                        SetThreadPriorityBoost(hThread, !enable);
+                        updatedAnyThread |= SetThreadPriorityBoost(hThread, !enable);
                     }
                     finally
                     {
                         CloseHandle(hThread);
                     }
                 }
+
+                if (updatedAnyThread)
+                    return true;
             }
             catch
             {
-                MessageBox.Show("Failed to set thread priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // The shared error below covers access denied and processes that exited.
             }
+
+            MessageBox.Show("Failed to set thread priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
         }
 
         /// <summary>

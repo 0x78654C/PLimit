@@ -34,6 +34,25 @@ public class JsonManageTests : IDisposable
         Assert.Equal("new", result[0].ProcessName);
     }
 
+    [Fact]
+    public void CreateJsonFile_CreatesMissingParentDirectory()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string path = Path.Combine(directory, "nested", "settings.json");
+        try
+        {
+            JsonManage.CreateJsonFile(path, new[] { new ProcessData { ProcessName = "new" } });
+
+            Assert.True(File.Exists(path));
+            Assert.Equal("new", JsonManage.ReadJsonFromFile<ProcessData[]>(path)[0].ProcessName);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
     // ── ReadJsonFromFile ──────────────────────────────────────────────────
 
     [Fact]

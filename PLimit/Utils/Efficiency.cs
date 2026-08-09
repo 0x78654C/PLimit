@@ -1,86 +1,69 @@
-﻿namespace PLimit.Utils
+namespace PLimit.Utils
 {
     public class Efficiency
     {
-        public Efficiency() { }
+        public void EnableEfficiency(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetEfficiency(from, processesListBox, label, searchBox, true, pid, isStartUp);
 
-        /// <summary>
-        /// Enables efficiency mode for the selected process. 
-        /// This method retrieves the process ID from the selected item in the processes list box, then uses the EfficiencyModeHelper to enable efficiency mode for that process.
-        /// After enabling efficiency mode, it refreshes the process list and applies any search filters to update the display accordingly.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void EnableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        public void DisableEfficiency(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetEfficiency(from, processesListBox, label, searchBox, false, pid, isStartUp);
+
+        private static void SetEfficiency(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            bool enabled,
+            string pid,
+            bool isStartUp)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(processId))
+            if (!ProcessTarget.TryResolve(processesListBox, pid, out var target))
+                return;
+
+            try
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var efficiency = new EfficiencyModeHelper();
+                if (enabled)
+                    efficiency.EnableEfficiencyMode(target.ProcessId);
+                else
+                    efficiency.DisableEfficiencyMode(target.ProcessId);
+            }
+            catch
+            {
+                MessageBox.Show("Failed to change efficiency mode! Try running the application as administrator.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            var setEfficiencyMode = new EfficiencyModeHelper();
-            setEfficiencyMode.EnableEfficiencyMode(int.Parse(processId));
-            if (!isStartUp)
+
+            if (target.IsUserAction && Properties.Settings.Default.isSaveingSettings)
             {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
+                var settings = new StoreSettings();
+                settings.UpdateSetting(
+                    StoreSettings.SettingType.Efficiency,
+                    target.ProcessName!,
+                    SettingState.FromBoolean(enabled));
             }
 
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var storeEfficiency = new StoreSettings();
-                    storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "True");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Disables efficiency mode for the selected process.
-        /// This method retrieves the process ID from the selected item in the processes list box, then uses the EfficiencyModeHelper to disable efficiency mode for that process.
-        /// After disabling efficiency mode, it refreshes the process list and applies any search filters to update the display accordingly.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void DisableEfficiency(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (isStartUp)
                 return;
-            }
-            var setEfficiencyMode = new EfficiencyModeHelper();
-            setEfficiencyMode.DisableEfficiencyMode(int.Parse(processId));
-            if (!isStartUp)
+
+            from.BeginInvoke(new Action(() =>
             {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var storeEfficiency = new StoreSettings();
-                    storeEfficiency.UpdateSetting(StoreSettings.SettingType.Efficiency, processesListBox.SelectedItems[0].SubItems[0].Text, "False");
-                }
-            }
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
         }
     }
 }

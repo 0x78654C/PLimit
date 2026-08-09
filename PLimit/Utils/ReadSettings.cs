@@ -1,431 +1,285 @@
-﻿namespace PLimit.Utils
+using System.Text.Json;
+
+namespace PLimit.Utils
 {
     public class ReadSettings
     {
-
-        public ReadSettings() { }
+        private IReadOnlyDictionary<string, ProcessData>? _settingsByName;
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the boost settings to the processes in the list box.
+        /// Applies the saved process priority-boost state. Both the current
+        /// Enabled/Disabled format and legacy True/False values are supported.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="isStartUp"></param>
-        public void ReadSettingsBoost(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadSettingsBoost(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-            if (!string.IsNullOrEmpty(pid))
+            var boost = new Boost();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
-                    return;
-                foreach (var setting in settings)
-                {
-                    if (setting.ProcessName == processName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Boosted))
-                            continue;
-                        var boost = new Boost();
-                        if (setting.Boosted == "True")
-                            boost.SetBoost(from, processesListBox, label, searchBox, true, pid, isStartUp);
-                        else
-                            boost.SetBoost(from, processesListBox, label, searchBox, false, pid, isStartUp);
-                    }
-                }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Boosted))
-                            continue;
-                        var boost = new Boost();
-                        if (setting.Boosted == "True")
-                            boost.SetBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text, isStartUp);
-                        else
-                            boost.SetBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text, isStartUp);
-                    }
-                }
-            }
+                if (SettingState.TryParse(setting.Boosted, out bool enabled))
+                    boost.SetBoost(from, processesListBox, label, searchBox, enabled, processId, isStartUp);
+            });
         }
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the efficiency settings to the processes in the list box.
+        /// Applies the saved efficiency-mode state.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        public void ReadSettingsEfficiency(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadSettingsEfficiency(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-
-            if (!string.IsNullOrEmpty(pid))
+            var efficiency = new Efficiency();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
+                if (!SettingState.TryParse(setting.Efficiency, out bool enabled))
                     return;
-                foreach (var setting in settings)
-                {
-                    if (setting.ProcessName == processName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Boosted))
-                            continue;
-                        var boost = new Boost();
-                        var efficiency = new Efficiency();
-                        if (setting.Efficiency == "True")
-                            efficiency.EnableEfficiency(from, processesListBox, label, searchBox, pid, isStartUp);
-                        else
-                            efficiency.DisableEfficiency(from, processesListBox, label, searchBox, pid, isStartUp);
-                    }
-                }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Efficiency))
-                            continue;
-                        var efficiency = new Efficiency();
-                        if (setting.Efficiency == "True")
-                            efficiency.EnableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        else
-                            efficiency.DisableEfficiency(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                    }
-                }
-            }
+
+                if (enabled)
+                    efficiency.EnableEfficiency(from, processesListBox, label, searchBox, processId, isStartUp);
+                else
+                    efficiency.DisableEfficiency(from, processesListBox, label, searchBox, processId, isStartUp);
+            });
         }
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the affinity settings to the processes in the list box.
+        /// Applies the saved processor affinity.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="isStartUp"></param>
-        public void ReadSettingsAffinity(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadSettingsAffinity(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-            if (!string.IsNullOrEmpty(pid))
+            var affinity = new Affinity();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
-                    return;
-                foreach (var setting in settings)
+                if (!string.IsNullOrWhiteSpace(setting.Affinity))
                 {
-                    if (setting.ProcessName == processName)
-                    {
-                        var affinity = new Affinity();
-                        if (!string.IsNullOrEmpty(setting.Affinity))
-                            affinity.SetAffinity(from, processesListBox, null, label, searchBox, null, setting.Affinity,pid, isStartUp);
-                    }
+                    affinity.SetAffinity(
+                        from,
+                        processesListBox,
+                        null,
+                        label,
+                        searchBox,
+                        null,
+                        setting.Affinity,
+                        processId,
+                        isStartUp);
                 }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        var affinity = new Affinity();
-                        if (!string.IsNullOrEmpty(setting.Affinity))
-                            affinity.SetAffinity(from, processesListBox, null, label, searchBox, null, setting.Affinity, item.SubItems[1].Text, isStartUp);
-                    }
-                }
-            }
+            });
         }
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the priority settings to the processes in the list box.
+        /// Applies the saved process priority class.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="isStartUp"></param>
-        public void ReadSettingsPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadSettingsPriority(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-            if (!string.IsNullOrEmpty(pid))
+            var priority = new PriorityProcess();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
-                    return;
-                foreach (var setting in settings)
+                switch (setting.Property)
                 {
-                    if (setting.ProcessName == processName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Property))
-                            continue;
-                        if (setting.Property == "Normal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.NormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.Property == "High")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.HighPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.Property == "AboveNormal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.AboveNormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.Property == "BelowNormal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.BelowNormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.Property == "RealTime")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.RealTimePriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                    }
+                    case "Normal":
+                        priority.NormalPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "High":
+                        priority.HighPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "AboveNormal":
+                        priority.AboveNormalPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "BelowNormal":
+                        priority.BelowNormalPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "RealTime":
+                        priority.RealTimePriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
                 }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Property))
-                            continue;
-                        if (setting.Property == "Normal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.NormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.Property == "High")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.HighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.Property == "AboveNormal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.AboveNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.Property == "BelowNormal")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.BelowNormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.Property == "RealTime")
-                        {
-                            var priority = new PriorityProcess();
-                            priority.RealTimePriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                    }
-                }
-            }
+            });
         }
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the IO priority settings to the processes in the list box.
+        /// Applies the saved I/O priority.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="isStartUp"></param>
-        public void ReadSettingsIOPriority(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadSettingsIOPriority(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-            if (!string.IsNullOrEmpty(pid))
+            var ioPriority = new IOPriority();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
-                    return;
-                foreach (var setting in settings)
+                switch (setting.IOProperty)
                 {
-                    if (setting.ProcessName == processName)
-                    {
-                        if (string.IsNullOrEmpty(setting.IOProperty))
-                            continue;
-                        if (setting.IOProperty == "Normal")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IONormalPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.IOProperty == "Low")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOLowPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.IOProperty == "High")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOHighPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                        if (setting.IOProperty == "VeryLow")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, pid, isStartUp);
-                        }
-                    }
+                    case "Normal":
+                        ioPriority.IONormalPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "Low":
+                        ioPriority.IOLowPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "High":
+                        ioPriority.IOHighPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
+                    case "VeryLow":
+                        ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
                 }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        if (string.IsNullOrEmpty(setting.IOProperty))
-                            continue;
-                        if (setting.IOProperty == "Normal")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IONormalPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.IOProperty == "Low")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.IOProperty == "High")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOHighPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                        if (setting.IOProperty == "VeryLow")
-                        {
-                            var ioPriority = new IOPriority();
-                            ioPriority.IOVeryLowPriority(from, processesListBox, label, searchBox, item.SubItems[1].Text, isStartUp);
-                        }
-                    }
-                }
-            }
+            });
         }
 
         /// <summary>
-        /// Read the settings from the specified file path and apply the Wdptb settings to the processes in the list box.
+        /// Applies the saved dynamic thread priority-boost state.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="isStartUp"></param>
-        public void ReadWdptbSettings(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string pid = "", bool isStartUp = false)
+        public void ReadWdptbSettings(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string pid = "",
+            bool isStartUp = false)
         {
-            if (!Directory.Exists(GlobalVars.LogDirPath))
-                return;
-            var settings = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath).ToList();
-            if (settings == null)
-                return;
-            if (!string.IsNullOrEmpty(pid))
+            var priority = new PriorityProcess();
+            ApplyToTargets(processesListBox, pid, (setting, processId) =>
             {
-                var processName = processesListBox.Items.Cast<ListViewItem>().FirstOrDefault(i => i.SubItems[1].Text == pid)?.SubItems[0].Text;
-                if (string.IsNullOrEmpty(processName))
-                    return;
-                foreach (var setting in settings)
+                if (SettingState.TryParse(setting.Wdptb, out bool enabled))
                 {
-                    if (setting.ProcessName == processName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Wdptb))
-                            continue;
-                        var wdptb = new PriorityProcess();
-                        if (setting.Wdptb == "Enabled")
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, pid, isStartUp);
-                        else
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, pid, isStartUp);
-                    }
+                    priority.SetThreadPriorityBoost(
+                        from,
+                        processesListBox,
+                        label,
+                        searchBox,
+                        enabled,
+                        processId,
+                        isStartUp);
                 }
-                return;
-            }
-            foreach (var setting in settings)
-            {
-                foreach (var item in processesListBox.Items.Cast<ListViewItem>())
-                {
-                    if (item.SubItems[0].Text == setting.ProcessName)
-                    {
-                        if (string.IsNullOrEmpty(setting.Wdptb))
-                            continue;
-                        var wdptb = new PriorityProcess();
-                        if (setting.Wdptb == "Enabled")
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, true, item.SubItems[1].Text, isStartUp);
-                        else
-                            wdptb.SetThreadPriorityBoost(from, processesListBox, label, searchBox, false, item.SubItems[1].Text, isStartUp);
-                    }
-                }
-            }
+            });
         }
 
         /// <summary>
-        /// Show the settings of the selected process in the list box by reading the settings from the specified file path and displaying them in a message box.
+        /// Shows the saved settings for the selected process without rewriting the file.
         /// </summary>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="from"></param>
-        /// <param name="jsonFilePath"></param>
-        public void ShowSettings(DoubleBufferedListView processesListBox, Label label, TextBox searchBox, Form from, string jsonFilePath)
+        public void ShowSettings(
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            Form from,
+            string jsonFilePath)
         {
+            if (processesListBox.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("Select a process first.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string processName = processesListBox.SelectedItems[0].SubItems[0].Text;
             try
             {
                 if (!File.Exists(jsonFilePath))
-                    return;
-                Json.JsonManage.UpdateJsonFileParameter<List<ProcessData>>(jsonFilePath, data =>
                 {
-                    if (data == null)
-                        return;
-                    var processData = data.FirstOrDefault(d => d.ProcessName == processesListBox.SelectedItems[0].SubItems[0].Text);
-                    if (processData != null)
-                    {
-                        var message = $"Process Name: {processData.ProcessName}\n" +
-                                      $"Boosted: {processData.Boosted}\n" +
-                                      $"Efficiency: {processData.Efficiency}\n" +
-                                      $"Affinity: {processData.Affinity}\n" +
-                                      $"Priority: {processData.Property}\n" +
-                                      $"IO Priority: {processData.IOProperty}";
-                        MessageBox.Show(message, "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"There are no settings saved for: {processesListBox.SelectedItems[0].SubItems[0].Text}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                });
+                    MessageBox.Show("No process settings have been saved yet.", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var data = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(jsonFilePath);
+                var processData = data.LastOrDefault(item =>
+                    item != null && string.Equals(item.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+
+                if (processData == null)
+                {
+                    MessageBox.Show($"There are no settings saved for: {processName}", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string message = $"Process Name: {processData.ProcessName}\n" +
+                                 $"Process Boost: {DisplayValue(processData.Boosted)}\n" +
+                                 $"Efficiency: {DisplayValue(processData.Efficiency)}\n" +
+                                 $"Affinity: {DisplayValue(processData.Affinity)}\n" +
+                                 $"Priority: {DisplayValue(processData.Property)}\n" +
+                                 $"I/O Priority: {DisplayValue(processData.IOProperty)}\n" +
+                                 $"Thread Boost: {DisplayValue(processData.Wdptb)}";
+                MessageBox.Show(message, "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
             {
-                MessageBox.Show($"An error occurred while deleting the settings: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unable to read the saved settings: {ex.Message}", "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void ApplyToTargets(
+            DoubleBufferedListView processesListBox,
+            string requestedPid,
+            Action<ProcessData, string> apply)
+        {
+            var settings = GetSettingsByName();
+            if (settings.Count == 0)
+                return;
+
+            foreach (ListViewItem item in processesListBox.Items)
+            {
+                if (item.SubItems.Count < 2)
+                    continue;
+
+                string processId = item.SubItems[1].Text;
+                if (!string.IsNullOrEmpty(requestedPid) &&
+                    !string.Equals(processId, requestedPid, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (settings.TryGetValue(item.SubItems[0].Text, out var setting))
+                    apply(setting, processId);
+
+                if (!string.IsNullOrEmpty(requestedPid))
+                    return;
+            }
+        }
+
+        private IReadOnlyDictionary<string, ProcessData> GetSettingsByName()
+        {
+            if (_settingsByName != null)
+                return _settingsByName;
+
+            var settings = new Dictionary<string, ProcessData>(StringComparer.OrdinalIgnoreCase);
+            if (!File.Exists(GlobalVars.LogFilePath))
+                return _settingsByName = settings;
+
+            try
+            {
+                foreach (var setting in Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath))
+                {
+                    if (setting != null && !string.IsNullOrWhiteSpace(setting.ProcessName))
+                        settings[setting.ProcessName] = setting;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+            {
+                // A missing, unreadable, or malformed file must not crash startup.
+            }
+
+            return _settingsByName = settings;
+        }
+
+        private static string DisplayValue(string value) =>
+            string.IsNullOrWhiteSpace(value) ? "Not saved" : value;
     }
 }

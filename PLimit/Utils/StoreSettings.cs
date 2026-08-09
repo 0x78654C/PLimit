@@ -16,14 +16,17 @@
         /// <exception cref="ArgumentOutOfRangeException">Thrown if settingType is not a valid value of the SettingType enumeration.</exception>
         public void UpdateSetting(SettingType settingType, string processName, string value)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(processName);
+            ArgumentNullException.ThrowIfNull(value);
+
             if (!Directory.Exists(GlobalVars.LogDirPath))
                 Directory.CreateDirectory(GlobalVars.LogDirPath);
 
             Json.JsonManage.UpdateJsonFileParameter<List<ProcessData>>(GlobalVars.LogFilePath, data =>
             {
-                data ??= new List<ProcessData>();
-
-                var processData = data.FirstOrDefault(d => d.ProcessName == processName);
+                data.RemoveAll(static item => item is null);
+                var processData = data.FirstOrDefault(d =>
+                    string.Equals(d.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
 
                 if (processData == null)
                 {
@@ -38,7 +41,7 @@
                 switch (settingType)
                 {
                     case SettingType.Boosted:
-                        processData.Boosted = value;
+                        processData.Boosted = NormalizeEnabledState(value, settingType);
                         break;
 
                     case SettingType.IOPriority:
@@ -54,11 +57,11 @@
                         break;
 
                     case SettingType.Efficiency:
-                        processData.Efficiency = value;
+                        processData.Efficiency = NormalizeEnabledState(value, settingType);
                         break;
 
                     case SettingType.Wdptb:
-                        processData.Wdptb = value;
+                        processData.Wdptb = NormalizeEnabledState(value, settingType);
                         break;
 
                     default:
@@ -76,8 +79,12 @@
         /// if the specified setting type is not recognized.</returns>
         public string? GetSetting(string processName, SettingType settingType)
         {
+            if (!File.Exists(GlobalVars.LogFilePath))
+                return string.Empty;
+
             var data = Json.JsonManage.ReadJsonFromFile<ProcessData[]>(GlobalVars.LogFilePath);
-            var processData = data.FirstOrDefault(d => d.ProcessName == processName);
+            var processData = data.FirstOrDefault(d =>
+                d != null && string.Equals(d.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
             if (processData == null) { return ""; }
             return settingType switch
             {
@@ -87,8 +94,19 @@
                 SettingType.Priority => processData.Property,
                 SettingType.Affinity => processData.Affinity,
                 SettingType.Efficiency => processData.Efficiency,
+                SettingType.Wdptb => processData.Wdptb,
                 _ => null
             };
+        }
+
+        private static string NormalizeEnabledState(string value, SettingType settingType)
+        {
+            if (SettingState.TryParse(value, out bool enabled))
+                return SettingState.FromBoolean(enabled);
+
+            throw new ArgumentException(
+                $"'{value}' is not a valid enabled/disabled value for {settingType}.",
+                nameof(value));
         }
 
         /// <summary>
@@ -98,7 +116,8 @@
         /// This operation is not reversible.</remarks>
         /// <param name="processName">The name of the process whose settings should be deleted. Cannot be null or empty.</param>
         public void DeleteSetting(string processName)
-           => Json.JsonManage.DeleteJsonData<ProcessData>(GlobalVars.LogFilePath, data => data.Where(d => d.ProcessName == processName));
+           => Json.JsonManage.DeleteJsonData<ProcessData>(GlobalVars.LogFilePath, data =>
+               data.Where(d => d == null || string.Equals(d.ProcessName, processName, StringComparison.OrdinalIgnoreCase)));
 
         /// <summary>
         /// Specifies the types of process settings that can be configured or queried.

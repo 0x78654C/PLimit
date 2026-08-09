@@ -2,25 +2,39 @@ namespace PLimit
 {
     internal static class Program
     {
-        static Mutex mutex = new Mutex(true, "plimit@xcoding");
+        private const string MutexName = "plimit@xcoding";
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            if (mutex.WaitOne(TimeSpan.Zero, true))
+            using var mutex = new Mutex(false, MutexName);
+            bool ownsMutex;
+            try
             {
-                // To customize application configuration such as set high DPI settings or default font,
-                // see https://aka.ms/applicationconfiguration.
-                ApplicationConfiguration.Initialize();
-                Application.Run(new MainForm());
-                mutex.ReleaseMutex();
-                mutex.Dispose();
+                ownsMutex = mutex.WaitOne(TimeSpan.Zero, true);
             }
-            else
+            catch (AbandonedMutexException)
+            {
+                ownsMutex = true;
+            }
+
+            if (!ownsMutex)
             {
                 MessageBox.Show("Another instance of PLimit is already running.", "PLimit", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new MainForm());
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
             }
         }
     }

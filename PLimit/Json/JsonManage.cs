@@ -1,106 +1,116 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace PLimit.Json
 {
     public static class JsonManage
     {
         private static readonly object FileLock = new();
+        private static readonly JsonSerializerOptions IndentedJsonOptions = new()
+        {
+            WriteIndented = true
+        };
 
         /// <summary>
-        /// Read data from JSON file.
+        /// Reads and deserializes a JSON file.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
         public static T ReadJsonFromFile<T>(string filePath)
         {
             lock (FileLock)
-            {
-                return JsonSerializer.Deserialize<T>(File.ReadAllText(filePath))
-                    ?? throw new InvalidDataException($"The JSON file '{filePath}' did not contain a value.");
-            }
+                return ReadJsonFromFileCore<T>(filePath);
         }
 
         /// <summary>
-        /// Create JSON File with data.
+        /// Creates or replaces a JSON file.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="ob"></param>
-        public static void CreateJsonFile(string filePath, object ob)
+        public static void CreateJsonFile(string filePath, object value)
         {
             lock (FileLock)
-                File.WriteAllText(filePath, JsonSerializer.Serialize(ob));
+                WriteJsonToFile(filePath, value);
         }
 
         /// <summary>
-        /// Update JSON file.
+        /// Appends one item to a JSON array.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="filePath"></param>
-        /// <param name="ToAdd"></param>
-        public static void UpdateJsonFile<T>(string filePath, T ToAdd)
+        public static void UpdateJsonFile<T>(string filePath, T item)
         {
             lock (FileLock)
             {
                 if (!File.Exists(filePath))
                 {
-                    CreateJsonFile(filePath, new[] { ToAdd });
+                    WriteJsonToFile(filePath, new[] { item });
                     return;
                 }
-                var json = ReadJsonFromFile<T[]>(filePath).ToList();
-                json.Add(ToAdd);
-                CreateJsonFile(filePath, json.ToArray());
+
+                var items = ReadJsonFromFileCore<T[]>(filePath).ToList();
+                items.Add(item);
+                WriteJsonToFile(filePath, items);
             }
         }
 
-
-        public static void UpdateJsonFileParameter<T>(string filePath, Action<T> updateAction) where T : new()
+        /// <summary>
+        /// Reads, updates, and rewrites a JSON document while holding one lock so
+        /// concurrent settings changes cannot overwrite one another.
+        /// </summary>
+        public static void UpdateJsonFileParameter<T>(string filePath, Action<T> updateAction)
+            where T : new()
         {
+            ArgumentNullException.ThrowIfNull(updateAction);
+
             lock (FileLock)
             {
                 T data;
-
                 if (!File.Exists(filePath))
                 {
                     data = new T();
                 }
                 else
                 {
-                    var json = File.ReadAllText(filePath);
+                    string json = File.ReadAllText(filePath);
                     data = string.IsNullOrWhiteSpace(json)
                         ? new T()
                         : JsonSerializer.Deserialize<T>(json) ?? new T();
                 }
 
                 updateAction(data);
-
-                File.WriteAllText(filePath, JsonSerializer.Serialize(data, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                }));
+                WriteJsonToFile(filePath, data, IndentedJsonOptions);
             }
         }
 
         /// <summary>
-        /// Delete data from a JSON file.
+        /// Removes matching values from a JSON array.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="filePath"></param>
-        /// <param name="toRemove"></param>
-        public static void DeleteJsonData<T>(string filePath, Func<IEnumerable<T>, IEnumerable<T>> toRemove)
+        public static void DeleteJsonData<T>(
+            string filePath,
+            Func<IEnumerable<T>, IEnumerable<T>> toRemove)
         {
+            ArgumentNullException.ThrowIfNull(toRemove);
+
             lock (FileLock)
             {
-                if (!File.Exists(filePath)) { return; }
-                var json = ReadJsonFromFile<T[]>(filePath).ToList();
-                json = json.Except(toRemove(json)).ToList();
-                CreateJsonFile(filePath, json.ToArray());
+                if (!File.Exists(filePath))
+                    return;
+
+                var items = ReadJsonFromFileCore<T[]>(filePath).ToList();
+                var removedItems = toRemove(items).ToHashSet();
+                items.RemoveAll(removedItems.Contains);
+                WriteJsonToFile(filePath, items);
             }
+        }
+
+        private static T ReadJsonFromFileCore<T>(string filePath) =>
+            JsonSerializer.Deserialize<T>(File.ReadAllText(filePath))
+            ?? throw new InvalidDataException($"The JSON file '{filePath}' did not contain a value.");
+
+        private static void WriteJsonToFile(
+            string filePath,
+            object value,
+            JsonSerializerOptions? options = null)
+        {
+            string? directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllText(filePath, JsonSerializer.Serialize(value, options));
         }
     }
 }

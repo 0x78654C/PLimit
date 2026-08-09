@@ -34,14 +34,12 @@ namespace PLimit
         private void LoadLogo()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var stream = assembly.GetManifestResourceStream("PLimit.logo1.png");
+            using var stream = assembly.GetManifestResourceStream("PLimit.logo1.png");
             if (stream == null) return;
 
-            var ms = new MemoryStream();
-            stream.CopyTo(ms);
-            stream.Dispose();
-            ms.Position = 0;
-            logoPictureBox.Image = Image.FromStream(ms);
+            using var image = Image.FromStream(stream);
+            logoPictureBox.Image?.Dispose();
+            logoPictureBox.Image = new Bitmap(image);
         }
 
         private void closeButton_Click(object sender, EventArgs e) => Close();

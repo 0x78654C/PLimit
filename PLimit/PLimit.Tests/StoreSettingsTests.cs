@@ -48,7 +48,7 @@ public class StoreSettingsTests : IDisposable
         var data = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
         Assert.Single(data);
         Assert.Equal("notepad", data[0].ProcessName);
-        Assert.Equal("True", data[0].Boosted);
+        Assert.Equal(SettingState.Enabled, data[0].Boosted);
     }
 
     [Theory]
@@ -65,7 +65,10 @@ public class StoreSettingsTests : IDisposable
 
         var data   = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
         var actual = typeof(ProcessData).GetProperty(propertyName)!.GetValue(data[0]) as string;
-        Assert.Equal(value, actual);
+        string expected = settingType == StoreSettings.SettingType.Boosted
+            ? SettingState.Enabled
+            : value;
+        Assert.Equal(expected, actual);
     }
 
     // ── UpdateSetting — existing process ──────────────────────────────────
@@ -79,7 +82,51 @@ public class StoreSettingsTests : IDisposable
 
         var data = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
         Assert.Single(data);              // still one entry (no duplicate)
-        Assert.Equal("True", data[0].Boosted);
+        Assert.Equal(SettingState.Enabled, data[0].Boosted);
+    }
+
+    [Fact]
+    public void UpdateSetting_DisabledBoost_WritesDisabledInsteadOfNull()
+    {
+        Sut().UpdateSetting(StoreSettings.SettingType.Boosted, "game", "False");
+
+        var data = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
+        var json = File.ReadAllText(_tempFile);
+
+        Assert.Equal(SettingState.Disabled, data[0].Boosted);
+        Assert.Contains("\"Boosted\": \"Disabled\"", json);
+        Assert.DoesNotContain("\"Boosted\": null", json);
+    }
+
+    [Fact]
+    public void UpdateSetting_ExistingLegacyNulls_AreRewrittenAsNonNullValues()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_tempFile, """
+            [null,{"ProcessName":"game","Boosted":null,"IOProperty":null,"Property":null,"Affinity":null,"Efficiency":null,"Wdptb":null}]
+            """);
+
+        Sut().UpdateSetting(StoreSettings.SettingType.Boosted, "game", "Disabled");
+
+        var data = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
+        var json = File.ReadAllText(_tempFile);
+
+        Assert.Single(data);
+        Assert.Equal(SettingState.Disabled, data[0].Boosted);
+        Assert.DoesNotContain("null", json);
+    }
+
+    [Fact]
+    public void UpdateSetting_MatchesProcessNamesCaseInsensitively()
+    {
+        var sut = Sut();
+        sut.UpdateSetting(StoreSettings.SettingType.Boosted, "Game", "Enabled");
+        sut.UpdateSetting(StoreSettings.SettingType.Boosted, "game", "Disabled");
+
+        var data = Json.JsonManage.ReadJsonFromFile<List<ProcessData>>(_tempFile);
+
+        Assert.Single(data);
+        Assert.Equal(SettingState.Disabled, data[0].Boosted);
     }
 
     [Fact]
@@ -122,6 +169,24 @@ public class StoreSettingsTests : IDisposable
         var result = Sut().GetSetting("missing", StoreSettings.SettingType.Boosted);
 
         Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void GetSetting_ReturnsEmptyString_WhenFileDoesNotExist()
+    {
+        var result = Sut().GetSetting("missing", StoreSettings.SettingType.Boosted);
+
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void GetSetting_ReturnsThreadBoostSetting()
+    {
+        Sut().UpdateSetting(StoreSettings.SettingType.Wdptb, "game", "Disabled");
+
+        var result = Sut().GetSetting("game", StoreSettings.SettingType.Wdptb);
+
+        Assert.Equal(SettingState.Disabled, result);
     }
 
     // ── DeleteSetting ─────────────────────────────────────────────────────

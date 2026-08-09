@@ -1,247 +1,129 @@
-﻿using System.Diagnostics;
-
+using System.Diagnostics;
 
 namespace PLimit.Utils
 {
     public class PriorityProcess
     {
-        public PriorityProcess() { }
+        public void HighPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.High, pid, isStartUp);
+
+        public void AboveNormalPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.AboveNormal, pid, isStartUp);
+
+        public void RealTimePriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.RealTime, pid, isStartUp);
+
+        public void NormalPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.Normal, pid, isStartUp);
+
+        public void BelowNormalPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.BelowNormal, pid, isStartUp);
 
         /// <summary>
-        /// Sets the priority of the process to High.
-        /// This means that the process will have a higher priority than normal processes, but not as high as real-time processes.
-        /// It is suitable for processes that require more CPU time than normal processes but do not need to be prioritized over real-time processes.
+        /// Enables or disables dynamic priority boost for every accessible thread
+        /// in the selected process.
         /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="isStartUp"></param>
-        public void HighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        public void SetThreadPriorityBoost(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            bool enable,
+            string pid = "",
+            bool isStartUp = false)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setPriority = new ProcessesManage();
-            if (!setPriority.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!ProcessTarget.TryResolve(processesListBox, pid, out var target))
                 return;
-            }
-            setPriority.SetPriorityClass(ProcessPriorityClass.High, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingPriority = new StoreSettings();
-                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
-                }
-            }
+
+            var processManager = new ProcessesManage();
+            if (!processManager.SetThreadBoost(enable, target.ProcessId))
+                return;
+
+            SaveSettingIfRequested(
+                target,
+                StoreSettings.SettingType.Wdptb,
+                SettingState.FromBoolean(enable));
+            RefreshIfRequested(from, processesListBox, label, searchBox, isStartUp);
         }
 
-        /// <summary>
-        /// Sets the priority of the process to Above Normal.
-        /// This means that the process will have a higher priority than normal processes, but not as high as real-time processes.
-        /// It is suitable for processes that require more CPU time than normal processes but do not need to be prioritized over real-time processes.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="isStartUp"></param>
-        public void AboveNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        private static void SetPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            ProcessPriorityClass priority,
+            string pid,
+            bool isStartUp)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setPriority = new ProcessesManage();
-            if (!setPriority.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!ProcessTarget.TryResolve(processesListBox, pid, out var target))
                 return;
-            }
-            setPriority.SetPriorityClass(ProcessPriorityClass.AboveNormal, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingPriority = new StoreSettings();
-                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "AboveNormal");
-                }
-            }
+
+            var processManager = new ProcessesManage();
+            if (!processManager.SetPriorityClass(priority, target.ProcessId))
+                return;
+
+            SaveSettingIfRequested(target, StoreSettings.SettingType.Priority, priority.ToString());
+            RefreshIfRequested(from, processesListBox, label, searchBox, isStartUp);
         }
 
-        /// <summary>
-        /// Sets the priority of the process to Real Time.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="isStartUp"></param>
-        public void RealTimePriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        private static void SaveSettingIfRequested(
+            ProcessTarget target,
+            StoreSettings.SettingType settingType,
+            string value)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setPriority = new ProcessesManage();
-            if (!setPriority.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!target.IsUserAction || !Properties.Settings.Default.isSaveingSettings)
                 return;
-            }
-            setPriority.SetPriorityClass(ProcessPriorityClass.RealTime, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingPriority = new StoreSettings();
-                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "RealTime");
-                }
-            }
+
+            var settings = new StoreSettings();
+            settings.UpdateSetting(settingType, target.ProcessName!, value);
         }
 
-        /// <summary>
-        /// Sets the priority of the process to Normal.
-        /// This means that the process will have a normal priority level, which is the default priority for most processes. 
-        /// It is suitable for processes that require a balanced performance and do not need to be prioritized over other processes.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="isStartUp"></param>
-        public void NormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        private static void RefreshIfRequested(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            bool isStartUp)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setPriority = new ProcessesManage();
-            if (!setPriority.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (isStartUp)
                 return;
-            }
-            setPriority.SetPriorityClass(ProcessPriorityClass.Normal, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingPriority = new StoreSettings();
-                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
-                }
-            }
-        }
 
-
-        /// <summary>
-        /// Sets the priority of the process to Below Normal. 
-        /// This means that the process will have a lower priority than Normal, but higher than Idle. 
-        /// It is useful for processes that are not time-sensitive and can run in the background without affecting the performance of other processes.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="isStartUp"></param>
-        public void BelowNormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setPriority = new ProcessesManage();
-            if (!setPriority.IsPidValid(processId))
+            from.BeginInvoke(new Action(() =>
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            setPriority.SetPriorityClass(ProcessPriorityClass.BelowNormal, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingPriority = new StoreSettings();
-                    settingPriority.UpdateSetting(StoreSettings.SettingType.Priority, processesListBox.SelectedItems[0].SubItems[0].Text, "BelowNormal");
-                }
-            }
-        }
- 
-
-        /// <summary>
-        /// Enables or disables the dynamic thread priority boost for all threads of the selected process.
-        /// When enabled, Windows temporarily raises a thread's priority after it wakes from a wait (the default OS behavior).
-        /// When disabled, threads run at their base priority without any dynamic boost.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        /// <param name="enable">true to enable boost, false to disable it.</param>
-        /// <param name="pid"></param>
-        /// <param name="isStartUp"></param>
-        public void SetThreadPriorityBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool enable, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            var manage = new ProcessesManage();
-            manage.SetThreadBoost(enable, int.Parse(processId));
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingIO = new StoreSettings();
-                    settingIO.UpdateSetting(StoreSettings.SettingType.Wdptb, processesListBox.SelectedItems[0].SubItems[0].Text, enable ? "Enabled" : "Disabled");
-                }
-            }
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
         }
     }
 }

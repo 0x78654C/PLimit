@@ -1,151 +1,80 @@
-﻿namespace PLimit.Utils
+namespace PLimit.Utils
 {
     public class IOPriority
-    {   
-        public IOPriority() { }
+    {
+        public void IOVeryLowPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessesManage.IO_PRIORITY_HINT.VeryLow, pid, isStartUp);
 
-        /// <summary>
-        /// Sets the I/O priority of all threads in the selected process to Very Low.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void IOVeryLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
+        public void IOLowPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessesManage.IO_PRIORITY_HINT.Low, pid, isStartUp);
+
+        public void IONormalPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessesManage.IO_PRIORITY_HINT.Normal, pid, isStartUp);
+
+        public void IOHighPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessesManage.IO_PRIORITY_HINT.High, pid, isStartUp);
+
+        private static void SetPriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            ProcessesManage.IO_PRIORITY_HINT priority,
+            string pid,
+            bool isStartUp)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setIoPriority = new ProcessesManage();
-            if (!setIoPriority.IsPidValid(processId))
+            if (!ProcessTarget.TryResolve(processesListBox, pid, out var target))
+                return;
+
+            var processManager = new ProcessesManage();
+            if (!processManager.SetIoPriorityAllThreads(target.ProcessId, priority))
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Failed to set I/O priority! Try running the application as administrator.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.VeryLow);
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingIO = new StoreSettings();
-                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "VeryLow");
-                }
-            }
-        }
 
-        /// <summary>
-        /// Sets the I/O priority of all threads in the selected process to Low.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void IOLowPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setIoPriority = new ProcessesManage();
-            if (!setIoPriority.IsPidValid(processId))
+            if (target.IsUserAction && Properties.Settings.Default.isSaveingSettings)
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                var settings = new StoreSettings();
+                settings.UpdateSetting(
+                    StoreSettings.SettingType.IOPriority,
+                    target.ProcessName!,
+                    priority.ToString());
             }
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Low);
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingIO = new StoreSettings();
-                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Low");
-                }
-            }
-        }
 
-        /// <summary>
-        /// Sets the I/O priority of all threads in the selected process to Normal.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void IONormalPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setIoPriority = new ProcessesManage();
-            if (!setIoPriority.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (isStartUp)
                 return;
-            }
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.Normal);
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingIO = new StoreSettings();
-                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "Normal");
-                }
-            }
-        }
 
-        /// <summary>
-        /// Sets the I/O priority of all threads in the selected process to High.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="processesListBox"></param>
-        /// <param name="label"></param>
-        /// <param name="searchBox"></param>
-        public void IOHighPriority(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, string pid = "", bool isStartUp = false)
-        {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setIoPriority = new ProcessesManage();
-            if (!setIoPriority.IsPidValid(processId))
+            from.BeginInvoke(new Action(() =>
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            setIoPriority.SetIoPriorityAllThreads(int.Parse(processId), ProcessesManage.IO_PRIORITY_HINT.High);
-            if (!isStartUp)
-            {
-                from.BeginInvoke(new Action(() =>
-                {
-                    var utils = new Utils();
-                    utils.RefreshProcessList(from, processesListBox, label);
-                    utils.SearchProcess(searchBox, processesListBox);
-                }));
-            }
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var settingIO = new StoreSettings();
-                    settingIO.UpdateSetting(StoreSettings.SettingType.IOPriority, processesListBox.SelectedItems[0].SubItems[0].Text, "High");
-                }
-            }
+                var utils = new Utils();
+                utils.RefreshProcessList(from, processesListBox, label);
+                utils.SearchProcess(searchBox, processesListBox);
+            }));
         }
     }
 }

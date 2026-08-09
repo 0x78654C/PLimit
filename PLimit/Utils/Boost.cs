@@ -14,14 +14,22 @@
         /// <param name="searchBox"></param>
         public void SetBoost(Form from, DoubleBufferedListView processesListBox, Label label, TextBox searchBox, bool isEnable, string pid = "", bool isStartUP = false)
         {
-            var processId = string.IsNullOrEmpty(pid) ? processesListBox.SelectedItems[0].SubItems[1].Text : pid;
-            var setBoost = new ProcessesManage();
-            if (!setBoost.IsPidValid(processId))
-            {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!ProcessTarget.TryResolve(processesListBox, pid, out var target))
                 return;
+
+            var processManager = new ProcessesManage();
+            if (!processManager.SetBoost(isEnable, target.ProcessId))
+                return;
+
+            if (target.IsUserAction && Properties.Settings.Default.isSaveingSettings)
+            {
+                var storeBoost = new StoreSettings();
+                storeBoost.UpdateSetting(
+                    StoreSettings.SettingType.Boosted,
+                    target.ProcessName!,
+                    SettingState.FromBoolean(isEnable));
             }
-            setBoost.SetBoost(isEnable, int.Parse(processId));
+
             if (!isStartUP)
             {
                 from.BeginInvoke(new Action(() =>
@@ -32,14 +40,6 @@
                 }));
             }
 
-            if (string.IsNullOrEmpty(pid))
-            {
-                if (Properties.Settings.Default.isSaveingSettings)
-                {
-                    var storeBoost = new StoreSettings();
-                    storeBoost.UpdateSetting(StoreSettings.SettingType.Boosted, processesListBox.SelectedItems[0].SubItems[0].Text, isEnable ? "True" : "False");
-                }
-            }
         }
     }
 }
