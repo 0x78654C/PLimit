@@ -22,6 +22,9 @@ namespace PLimit.Utils
         static extern bool CloseHandle(IntPtr hObject);
 
         [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool GetProcessPriorityBoost(
     IntPtr hProcess,
     out bool pDisablePriorityBoost);
@@ -37,6 +40,7 @@ namespace PLimit.Utils
 
         const int TOKEN_QUERY = 0x0008;
         const int TokenUser = 1;
+        const uint PROCESS_SET_INFORMATION = 0x0200;
 
         // native NTSTATUS version
         [DllImport("ntdll.dll")]
@@ -432,10 +436,16 @@ namespace PLimit.Utils
         /// <param name="processId"></param>
         public bool SetBoost(bool isEnabled, int processId)
         {
+            IntPtr handle = IntPtr.Zero;
             try
             {
-                using var getProcess = Process.GetProcessById(processId);
-                IntPtr handle = getProcess.Handle;
+                // SetProcessPriorityBoost needs only PROCESS_SET_INFORMATION.
+                // Process.Handle can request broader rights and fail even when this
+                // specific operation is allowed for the elevated application.
+                handle = OpenProcess(PROCESS_SET_INFORMATION, false, processId);
+                if (handle == IntPtr.Zero)
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+
                 // The Win32 API accepts a "disable" flag, while the application API
                 // accepts an "enable" flag.
                 if (!SetProcessPriorityBoost(handle, !isEnabled))
@@ -444,8 +454,17 @@ namespace PLimit.Utils
             }
             catch
             {
-                MessageBox.Show("Failed to set priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Failed to set priority boost. The process may be protected or may no longer be running.",
+                    "Process Limitator",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
                 return false;
+            }
+            finally
+            {
+                if (handle != IntPtr.Zero)
+                    CloseHandle(handle);
             }
         }
 

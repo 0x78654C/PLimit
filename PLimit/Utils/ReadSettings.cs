@@ -279,7 +279,7 @@ namespace PLimit.Utils
             return _settingsByName = settings;
         }
 
-        private static string DisplayValue(string value) =>
+        private static string DisplayValue(string? value) =>
             string.IsNullOrWhiteSpace(value) ? "Not saved" : value;
     }
 }

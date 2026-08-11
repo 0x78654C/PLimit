@@ -1,4 +1,5 @@
 using PLimit.Utils;
+using System.Text.Json;
 using Xunit;
 
 namespace PLimit.Tests;
@@ -86,6 +87,24 @@ public class StoreSettingsTests : IDisposable
     }
 
     [Fact]
+    public void UpdateSetting_NewProcess_WritesOnlyConfiguredSettings()
+    {
+        Sut().UpdateSetting(StoreSettings.SettingType.Boosted, "notepad", "False");
+
+        using var document = JsonDocument.Parse(File.ReadAllText(_tempFile));
+        var setting = Assert.Single(document.RootElement.EnumerateArray());
+
+        Assert.Equal(2, setting.EnumerateObject().Count());
+        Assert.Equal("notepad", setting.GetProperty(nameof(ProcessData.ProcessName)).GetString());
+        Assert.Equal(SettingState.Disabled, setting.GetProperty(nameof(ProcessData.Boosted)).GetString());
+        Assert.False(setting.TryGetProperty(nameof(ProcessData.IOProperty), out _));
+        Assert.False(setting.TryGetProperty(nameof(ProcessData.Property), out _));
+        Assert.False(setting.TryGetProperty(nameof(ProcessData.Affinity), out _));
+        Assert.False(setting.TryGetProperty(nameof(ProcessData.Efficiency), out _));
+        Assert.False(setting.TryGetProperty(nameof(ProcessData.Wdptb), out _));
+    }
+
+    [Fact]
     public void UpdateSetting_DisabledBoost_WritesDisabledInsteadOfNull()
     {
         Sut().UpdateSetting(StoreSettings.SettingType.Boosted, "game", "False");
@@ -99,7 +118,7 @@ public class StoreSettingsTests : IDisposable
     }
 
     [Fact]
-    public void UpdateSetting_ExistingLegacyNulls_AreRewrittenAsNonNullValues()
+    public void UpdateSetting_ExistingLegacyNulls_AreOmittedOnRewrite()
     {
         Directory.CreateDirectory(_tempDir);
         File.WriteAllText(_tempFile, """
@@ -114,6 +133,28 @@ public class StoreSettingsTests : IDisposable
         Assert.Single(data);
         Assert.Equal(SettingState.Disabled, data[0].Boosted);
         Assert.DoesNotContain("null", json);
+        Assert.DoesNotContain(nameof(ProcessData.IOProperty), json);
+        Assert.DoesNotContain(nameof(ProcessData.Property), json);
+        Assert.DoesNotContain(nameof(ProcessData.Affinity), json);
+        Assert.DoesNotContain(nameof(ProcessData.Efficiency), json);
+        Assert.DoesNotContain(nameof(ProcessData.Wdptb), json);
+    }
+
+    [Fact]
+    public void UpdateSetting_ExistingEmptyValues_AreOmittedOnRewrite()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_tempFile, """
+            [{"ProcessName":"game","Boosted":"","IOProperty":"","Property":"","Affinity":"","Efficiency":"","Wdptb":""}]
+            """);
+
+        Sut().UpdateSetting(StoreSettings.SettingType.Priority, "game", "High");
+
+        using var document = JsonDocument.Parse(File.ReadAllText(_tempFile));
+        var setting = Assert.Single(document.RootElement.EnumerateArray());
+
+        Assert.Equal(2, setting.EnumerateObject().Count());
+        Assert.Equal("High", setting.GetProperty(nameof(ProcessData.Property)).GetString());
     }
 
     [Fact]
