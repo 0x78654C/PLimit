@@ -15,7 +15,7 @@ namespace PLimit.Utils
                 return;
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
-            searchProcess.SearchProcess(ref processesListBox, search, isMessage);
+            searchProcess.SearchProcess(processesListBox, search, isMessage);
         }
 
         /// <summary>

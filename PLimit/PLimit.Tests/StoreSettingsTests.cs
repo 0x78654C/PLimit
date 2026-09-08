@@ -39,6 +39,19 @@ public class StoreSettingsTests : IDisposable
 
     private static StoreSettings Sut() => new();
 
+    [Fact]
+    public void ReadSettingsPriority_AppliesSavedIdlePriority() => WindowsTest.Run(() => WindowsTest.WithProcess(process =>
+    {
+        Sut().UpdateSetting(StoreSettings.SettingType.Priority, process.ProcessName, "Idle");
+        using var list = new DoubleBufferedListView();
+        list.Items.Add(new ListViewItem(new[] { process.ProcessName, process.Id.ToString() }));
+
+        new ReadSettings().ReadSettingsPriority(list, null!, null!, null!, process.Id.ToString(), isStartUp: true);
+
+        process.Refresh();
+        Assert.Equal(System.Diagnostics.ProcessPriorityClass.Idle, process.PriorityClass);
+    }));
+
     // ── UpdateSetting — new process ───────────────────────────────────────
 
     [Fact]

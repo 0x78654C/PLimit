@@ -41,7 +41,7 @@ namespace PLimit.Utils
         private static extern bool GetProcessInformation(
             IntPtr hProcess,
             PROCESS_INFORMATION_CLASS processInformationClass,
-            out PROCESS_POWER_THROTTLING_STATE processInformation,
+            ref PROCESS_POWER_THROTTLING_STATE processInformation,
             uint processInformationSize);
 
         private enum PROCESS_INFORMATION_CLASS
@@ -164,14 +164,18 @@ namespace PLimit.Utils
                 priorityClass == IDLE_PRIORITY_CLASS ||
                 priorityClass == BELOW_NORMAL_PRIORITY_CLASS;
 
+            var state = new PROCESS_POWER_THROTTLING_STATE
+            {
+                Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION
+            };
             bool gotInfo = GetProcessInformation(
                 processHandle,
                 PROCESS_INFORMATION_CLASS.ProcessPowerThrottling,
-                out var state,
+                ref state,
                 (uint)Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
 
             if (!gotInfo)
-                return false;
+                throw new Win32Exception(Marshal.GetLastWin32Error());
 
             bool ecoQosEnabled =
                 (state.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED) != 0;

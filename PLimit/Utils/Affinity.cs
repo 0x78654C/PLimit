@@ -7,6 +7,48 @@ namespace PLimit.Utils
 
         public Affinity() { }
 
+        internal static void PopulateMenu(ToolStripMenuItem menu, int pid, EventHandler onCoreClick)
+        {
+            // Clear() removes items without disposing their handles and event handlers.
+            while (menu.DropDownItems.Count > 0)
+            {
+                var item = menu.DropDownItems[0];
+                item.Dispose();
+            }
+            menu.Tag = null;
+
+            long mask;
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                mask = process.ProcessorAffinity.ToInt64();
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or ArgumentException or NotSupportedException)
+            {
+                menu.DropDownItems.Add(new ToolStripMenuItem("Affinity unavailable (process exited or access denied)")
+                {
+                    Enabled = false
+                });
+                return;
+            }
+
+            menu.Tag = pid;
+            int coreCount = Math.Min(Environment.ProcessorCount, IntPtr.Size * 8);
+            for (int core = 0; core < coreCount; core++)
+            {
+                var item = new ToolStripMenuItem($"Core {core}")
+                {
+                    CheckOnClick = true,
+                    Checked = (mask & (1L << core)) != 0,
+                    Tag = core,
+                    BackColor = DarkTheme.Surface,
+                    ForeColor = DarkTheme.TextPrimary
+                };
+                item.Click += onCoreClick;
+                menu.DropDownItems.Add(item);
+            }
+        }
+
         /// <summary>
         /// Set affinity for a process based on the checked cores in the context menu. 
         /// The menu items should have their Tag set to the core index (0-based) and the parent menu's Tag set to the process ID.
@@ -39,6 +81,7 @@ namespace PLimit.Utils
             }
             catch
             {
+                RestoreCheckedState(sender);
                 if (!isStartUp)
                     MessageBox.Show("The process is no longer running. Refresh the process list.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -69,12 +112,15 @@ namespace PLimit.Utils
                     return;
                 }
 
+                string processName;
                 try
                 {
+                    processName = p.ProcessName;
                     p.ProcessorAffinity = (IntPtr)newMask; // apply enable/disable cores
                 }
                 catch
                 {
+                    RestoreCheckedState(sender);
                     if (!isStartUp)
                         MessageBox.Show("Failed to change processor affinity! Try running the application as administrator.", "Process Limiter", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -83,7 +129,7 @@ namespace PLimit.Utils
                 if (string.IsNullOrEmpty(pidId) && Properties.Settings.Default.isSaveingSettings)
                 {
                     var storeAffinity = new StoreSettings();
-                    storeAffinity.UpdateSetting(StoreSettings.SettingType.Affinity, p.ProcessName, newMask.ToString());
+                    storeAffinity.SaveAppliedSetting(from, StoreSettings.SettingType.Affinity, processName, newMask.ToString());
                 }
 
                 if (!isStartUp)
@@ -96,6 +142,12 @@ namespace PLimit.Utils
                     }));
                 }
             }
+        }
+
+        private static void RestoreCheckedState(object? sender)
+        {
+            if (sender is ToolStripMenuItem clicked)
+                clicked.Checked = !clicked.Checked;
         }
     }
 }

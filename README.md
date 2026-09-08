@@ -95,11 +95,14 @@ Settings are stored in `Settings/processes.json` next to the executable.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/PLimit.git
+git clone https://github.com/0x78654C/PLimit.git
 cd PLimit
 
 # Build
 dotnet build PLimit.sln -c Release
+
+# Run regression tests
+dotnet test PLimit.sln -c Release
 ```
 
 The output is placed in `PLimit\bin\Release\net10.0-windows\`.
@@ -108,7 +111,7 @@ The output is placed in `PLimit\bin\Release\net10.0-windows\`.
 
 ## Release Notes
 
-See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the latest changes.
+See the [Releases](../../releases) page for the latest changes.
 
 ---
 

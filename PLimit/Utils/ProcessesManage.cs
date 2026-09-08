@@ -550,10 +550,15 @@ namespace PLimit.Utils
         /// </summary>
         /// <param name="listView"></param>
         /// <param name="searchString"></param>
-        public void SearchProcess(ref DoubleBufferedListView listView, string searchString, bool isMessage = true)
+        public void SearchProcess(DoubleBufferedListView listView, string searchString, bool isMessage = true)
         {
-            ListViewItem? foundItem =
-                listView.FindItemWithText(searchString, true, 0, true);
+            string query = searchString.Trim();
+            if (query.Length == 0)
+                return;
+
+            ListViewItem? foundItem = listView.Items.Cast<ListViewItem>().FirstOrDefault(item =>
+                item.Text.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (item.SubItems.Count > 1 && item.SubItems[1].Text.Contains(query, StringComparison.OrdinalIgnoreCase)));
             if (foundItem != null)
             {
                 foundItem.Selected = true;

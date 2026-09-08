@@ -60,6 +60,7 @@
             aboveNormalToolStripMenuItem = new ToolStripMenuItem();
             normalToolStripMenuItem1 = new ToolStripMenuItem();
             belowNormalToolStripMenuItem = new ToolStripMenuItem();
+            idleToolStripMenuItem = new ToolStripMenuItem();
             windowsDynamicThreadPriorityBoostWDTPBToolStripMenuItem = new ToolStripMenuItem();
             enableToolStripMenuItem2 = new ToolStripMenuItem();
             disableToolStripMenuItem2 = new ToolStripMenuItem();
@@ -98,6 +99,7 @@
             processesListBox.HideSelection = true;
             processesListBox.Location = new Point(12, 41);
             processesListBox.MultiSelect = false;
+            processesListBox.ContextMenuStrip = actionMenuStrip;
             processesListBox.Name = "processesListBox";
             processesListBox.OwnerDraw = true;
             processesListBox.Size = new Size(1301, 480);
@@ -105,7 +107,7 @@
             processesListBox.TabIndex = 1;
             processesListBox.UseCompatibleStateImageBehavior = false;
             processesListBox.View = View.Details;
-            processesListBox.MouseClick += processesListBox_MouseClick;
+            processesListBox.MouseDown += processesListBox_MouseDown;
             processesListBox.MouseEnter += processesListBox_MouseEnter;
             processesListBox.MouseLeave += processesListBox_MouseLeave;
             // 
@@ -260,7 +262,7 @@
             // 
             // priorityToolStripMenuItem
             // 
-            priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem });
+            priorityToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { realTimedangerToolStripMenuItem, highToolStripMenuItem1, aboveNormalToolStripMenuItem, normalToolStripMenuItem1, belowNormalToolStripMenuItem, idleToolStripMenuItem });
             priorityToolStripMenuItem.Name = "priorityToolStripMenuItem";
             priorityToolStripMenuItem.Size = new Size(333, 22);
             priorityToolStripMenuItem.Text = "CPU Priority";
@@ -299,6 +301,13 @@
             belowNormalToolStripMenuItem.Size = new Size(168, 22);
             belowNormalToolStripMenuItem.Text = "Below Normal";
             belowNormalToolStripMenuItem.Click += belowNormalToolStripMenuItem_Click;
+            //
+            // idleToolStripMenuItem
+            //
+            idleToolStripMenuItem.Name = "idleToolStripMenuItem";
+            idleToolStripMenuItem.Size = new Size(168, 22);
+            idleToolStripMenuItem.Text = "Idle";
+            idleToolStripMenuItem.Click += idleToolStripMenuItem_Click;
             // 
             // windowsDynamicThreadPriorityBoostWDTPBToolStripMenuItem
             // 
@@ -326,7 +335,7 @@
             afinityToolStripMenuItem.Name = "afinityToolStripMenuItem";
             afinityToolStripMenuItem.Size = new Size(333, 22);
             afinityToolStripMenuItem.Text = "CPU Affinity";
-            afinityToolStripMenuItem.MouseHover += afinityToolStripMenuItem_MouseHover;
+            actionMenuStrip.Opening += actionMenuStrip_Opening;
             // 
             // efficiencyModeToolStripMenuItem
             // 
@@ -494,6 +503,7 @@
         private ToolStripMenuItem aboveNormalToolStripMenuItem;
         private ToolStripMenuItem normalToolStripMenuItem1;
         private ToolStripMenuItem belowNormalToolStripMenuItem;
+        private ToolStripMenuItem idleToolStripMenuItem;
         private ToolStripMenuItem afinityToolStripMenuItem;
         private ColumnHeader efficiencyMode;
         private ToolStripMenuItem efficiencyModeToolStripMenuItem;

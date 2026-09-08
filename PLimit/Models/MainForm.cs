@@ -15,7 +15,6 @@
 */
 
 using PLimit.Utils;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace PLimit
@@ -277,7 +276,7 @@ namespace PLimit
                 return;
             var searchProcess = new ProcessesManage();
             var search = searchProcessTxt.Text;
-            searchProcess.SearchProcess(ref processesListBox, search, isMessage);
+            searchProcess.SearchProcess(processesListBox, search, isMessage);
         }
 
         /// <summary>
@@ -313,6 +312,13 @@ namespace PLimit
                         _refreshCancellation.Token);
 
                     if (_isClosing || _refreshCancellation.IsCancellationRequested)
+                        return;
+
+                    // The user may open a menu while the background capture is running.
+                    // Keep its target rows stable until the next refresh.
+                    if (actionMenuStrip.Visible ||
+                        (!showBusyState && !_refreshRequested &&
+                         (_isPointerOverProcessList || WindowState == FormWindowState.Minimized)))
                         return;
 
                     _processSnapshots = snapshots;
@@ -399,17 +405,19 @@ namespace PLimit
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void processesListBox_MouseClick(object sender, MouseEventArgs e)
+        private void processesListBox_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
                 var clickedItem = processesListBox.GetItemAt(e.X, e.Y);
                 if (clickedItem == null)
+                {
+                    processesListBox.SelectedItems.Clear();
                     return;
+                }
 
                 clickedItem.Selected = true;
                 clickedItem.Focused = true;
-                actionMenuStrip.Show(Cursor.Position);
             }
         }
 
@@ -542,6 +550,12 @@ namespace PLimit
             var processPriorty = new PriorityProcess();
             processPriorty.BelowNormalPriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
         }
+
+        private void idleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var processPriority = new PriorityProcess();
+            processPriority.IdlePriority(this, processesListBox, countProcessesLbl, searchProcessTxt);
+        }
         #endregion
 
         #region Efificiency Mode Menu Events
@@ -571,54 +585,21 @@ namespace PLimit
         #endregion
 
         /// <summary>
-        /// Load processor affinity submenu event.
+        /// Populate affinity choices when the context menu opens, including keyboard navigation.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void afinityToolStripMenuItem_MouseHover(object sender, EventArgs e)
+        private void actionMenuStrip_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            afinityToolStripMenuItem.DropDownItems.Clear();
-
-            if (processesListBox.SelectedItems.Count == 0)
-                return;
-
-            if (!int.TryParse(processesListBox.SelectedItems[0].SubItems[1].Text, out int pid))
-                return;
-
-            var processManage = new ProcessesManage();
-            if (!processManage.IsPidValid(pid.ToString()))
+            if (processesListBox.SelectedItems.Count == 0 ||
+                processesListBox.SelectedItems[0].SubItems.Count < 2 ||
+                !int.TryParse(processesListBox.SelectedItems[0].SubItems[1].Text, out int pid))
             {
-                MessageBox.Show("Invalid PID. Refresh process list!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                e.Cancel = true;
                 return;
             }
-            Process p;
-            try { p = Process.GetProcessById(pid); }
-            catch { return; }
 
-            using (p)
-            {
-                afinityToolStripMenuItem.Tag = pid; // store PID for click handler
-
-                long mask = (long)p.ProcessorAffinity;     // bitmask
-                int coreCount = Math.Min(Environment.ProcessorCount, IntPtr.Size * 8);
-
-                for (int core = 0; core < coreCount; core++)
-                {
-                    bool isSet = (mask & (1L << core)) != 0;
-
-                    var coreItem = new ToolStripMenuItem($"Core {core}")
-                    {
-                        CheckOnClick = true,
-                        Checked = isSet,
-                        Tag = core, // store core index
-                        BackColor = DarkTheme.Surface,
-                        ForeColor = DarkTheme.TextPrimary
-                    };
-
-                    coreItem.Click += CoreToolStripMenuItem_Click;
-                    afinityToolStripMenuItem.DropDownItems.Add(coreItem);
-                }
-            }
+            Affinity.PopulateMenu(afinityToolStripMenuItem, pid, CoreToolStripMenuItem_Click);
         }
 
         /// <summary>

@@ -24,7 +24,7 @@
             if (target.IsUserAction && Properties.Settings.Default.isSaveingSettings)
             {
                 var storeBoost = new StoreSettings();
-                storeBoost.UpdateSetting(
+                storeBoost.SaveAppliedSetting(from,
                     StoreSettings.SettingType.Boosted,
                     target.ProcessName!,
                     SettingState.FromBoolean(isEnable));

@@ -60,7 +60,7 @@ namespace PLimit.Utils
             if (target.IsUserAction && Properties.Settings.Default.isSaveingSettings)
             {
                 var settings = new StoreSettings();
-                settings.UpdateSetting(
+                settings.SaveAppliedSetting(from,
                     StoreSettings.SettingType.IOPriority,
                     target.ProcessName!,
                     priority.ToString());

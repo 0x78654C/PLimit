@@ -111,6 +111,9 @@ namespace PLimit.Utils
                     case "RealTime":
                         priority.RealTimePriority(from, processesListBox, label, searchBox, processId, isStartUp);
                         break;
+                    case "Idle":
+                        priority.IdlePriority(from, processesListBox, label, searchBox, processId, isStartUp);
+                        break;
                 }
             });
         }

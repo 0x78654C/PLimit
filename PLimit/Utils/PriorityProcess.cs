@@ -49,6 +49,15 @@ namespace PLimit.Utils
             bool isStartUp = false) =>
             SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.BelowNormal, pid, isStartUp);
 
+        public void IdlePriority(
+            Form from,
+            DoubleBufferedListView processesListBox,
+            Label label,
+            TextBox searchBox,
+            string pid = "",
+            bool isStartUp = false) =>
+            SetPriority(from, processesListBox, label, searchBox, ProcessPriorityClass.Idle, pid, isStartUp);
+
         /// <summary>
         /// Enables or disables dynamic priority boost for every accessible thread
         /// in the selected process.
@@ -70,6 +79,7 @@ namespace PLimit.Utils
                 return;
 
             SaveSettingIfRequested(
+                from,
                 target,
                 StoreSettings.SettingType.Wdptb,
                 SettingState.FromBoolean(enable));
@@ -92,11 +102,12 @@ namespace PLimit.Utils
             if (!processManager.SetPriorityClass(priority, target.ProcessId))
                 return;
 
-            SaveSettingIfRequested(target, StoreSettings.SettingType.Priority, priority.ToString());
+            SaveSettingIfRequested(from, target, StoreSettings.SettingType.Priority, priority.ToString());
             RefreshIfRequested(from, processesListBox, label, searchBox, isStartUp);
         }
 
         private static void SaveSettingIfRequested(
+            Form from,
             ProcessTarget target,
             StoreSettings.SettingType settingType,
             string value)
@@ -105,7 +116,7 @@ namespace PLimit.Utils
                 return;
 
             var settings = new StoreSettings();
-            settings.UpdateSetting(settingType, target.ProcessName!, value);
+            settings.SaveAppliedSetting(from, settingType, target.ProcessName!, value);
         }
 
         private static void RefreshIfRequested(

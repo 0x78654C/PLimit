@@ -4,6 +4,20 @@
     {
         public StoreSettings() { }
 
+        internal void SaveAppliedSetting(IWin32Window owner, SettingType settingType, string processName, string value)
+        {
+            try
+            {
+                UpdateSetting(settingType, processName, value);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
+            {
+                MessageBox.Show(owner,
+                    $"The process setting was applied, but could not be saved: {ex.Message}",
+                    "Process Settings", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         /// <summary>
         /// Updates the specified setting for a process in the configuration file. If the process does not exist, it is added
         /// with the provided setting.

@@ -106,11 +106,33 @@ namespace PLimit.Json
             object value,
             JsonSerializerOptions? options = null)
         {
-            string? directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory))
-                Directory.CreateDirectory(directory);
+            string json = JsonSerializer.Serialize(value, options);
+            string destination = Path.GetFullPath(filePath);
+            string directory = Path.GetDirectoryName(destination)!;
+            Directory.CreateDirectory(directory);
 
-            File.WriteAllText(filePath, JsonSerializer.Serialize(value, options));
+            // Finish writing beside the destination before replacing it, so a failed
+            // write never truncates the user's existing settings.
+            string temporaryFile = Path.Combine(directory, $".{Path.GetFileName(destination)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                using (var stream = new FileStream(temporaryFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    using var writer = new StreamWriter(stream, leaveOpen: true);
+                    writer.Write(json);
+                    writer.Flush();
+                    stream.Flush(flushToDisk: true);
+                }
+
+                if (File.Exists(destination))
+                    File.Replace(temporaryFile, destination, null);
+                else
+                    File.Move(temporaryFile, destination);
+            }
+            finally
+            {
+                File.Delete(temporaryFile);
+            }
         }
     }
 }

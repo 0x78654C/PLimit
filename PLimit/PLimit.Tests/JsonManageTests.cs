@@ -56,6 +56,50 @@ public class JsonManageTests : IDisposable
     // ── ReadJsonFromFile ──────────────────────────────────────────────────
 
     [Fact]
+    public void CreateJsonFile_LockedDestination_PreservesContentAndCleansTemporaryFile()
+    {
+        const string original = "[{\"ProcessName\":\"keep\"}]";
+        File.WriteAllText(_tempFile, original);
+        using var lockedFile = new FileStream(_tempFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        Assert.Throws<IOException>(() =>
+            JsonManage.CreateJsonFile(_tempFile, new[] { new ProcessData { ProcessName = "replacement" } }));
+
+        Assert.Equal(original, File.ReadAllText(_tempFile));
+        Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(_tempFile)!, $".{Path.GetFileName(_tempFile)}.*.tmp"));
+    }
+
+    [Fact]
+    public void CreateJsonFile_ReplacesDocumentWithoutChangingAnOpenReader()
+    {
+        const string original = "[{\"ProcessName\":\"keep\"}]";
+        File.WriteAllText(_tempFile, original);
+        using var stream = new FileStream(_tempFile, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+        using var reader = new StreamReader(stream);
+
+        JsonManage.CreateJsonFile(_tempFile, new[] { new ProcessData { ProcessName = "replacement" } });
+
+        Assert.Equal(original, reader.ReadToEnd());
+        Assert.Equal("replacement", Assert.Single(JsonManage.ReadJsonFromFile<ProcessData[]>(_tempFile)).ProcessName);
+    }
+
+    [Fact]
+    public void UpdateJsonFileParameter_FailedUpdate_PreservesOriginalContent()
+    {
+        const string original = "[{\"ProcessName\":\"keep\"}]";
+        File.WriteAllText(_tempFile, original);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            JsonManage.UpdateJsonFileParameter<List<ProcessData>>(_tempFile, data =>
+            {
+                data.Clear();
+                throw new InvalidOperationException("Update failed");
+            }));
+
+        Assert.Equal(original, File.ReadAllText(_tempFile));
+    }
+
+    [Fact]
     public void ReadJsonFromFile_ReturnsDeserializedObject()
     {
         var original = new[] { new ProcessData { ProcessName = "notepad", Property = "Normal" } };
