@@ -26,7 +26,10 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
         public ulong? OriginalAffinity;
         public ulong? AppliedAffinity;
         public CpuLimitRule? ActiveLimit;
+        public CpuLimitRule? PendingLimit;
+        public string? LimitPattern;
         public TimeSpan LimitUntil;
+        public TimeSpan CooldownUntil;
         public TimeSpan? BusySince;
         public TimeSpan? BalanceSince;
         public TimeSpan? QuietSince;
@@ -57,7 +60,7 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
             try
             {
                 saved.TryGetValue(process.Name, out var persistent);
-                var rule = settings.FindRule(process.Name);
+                var rule = settings.ResolveRule(process.Name);
                 bool hasPriority = persistent != null && Enum.TryParse<ProcessPriorityClass>(persistent.Property, out var priority)
                     && Enum.IsDefined(priority);
                 bool efficiency = persistent != null && SettingState.TryParse(persistent.Efficiency, out bool eco) && eco;
@@ -85,7 +88,7 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
                     catch (Exception ex) { ReportError(process, ex.Message, now); }
                 }
                 Attempt(() => UpdatePriority(process, state, boost ? "Foreground boost" : balance ? "Background balance" : ""));
-                Attempt(() => UpdateLimit(process, state, rule?.CpuLimit, now));
+                Attempt(() => UpdateLimit(process, state, rule, foreground, now));
 
                 if (persistent != null && now >= state.NextSaved)
                 {
@@ -150,8 +153,23 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
         state.PriorityReason = "";
     }
 
-    private void UpdateLimit(IAutomationProcess process, State state, CpuLimitRule? rule, TimeSpan now)
+    private void UpdateLimit(IAutomationProcess process, State state, AutomationRule? matchedRule, bool foreground, TimeSpan now)
     {
+        var rule = matchedRule?.CpuLimit;
+        string? pattern = matchedRule == null ? null : ProcessRuleMatcher.NormalizePattern(matchedRule.ProcessName);
+        bool ruleChanged = !string.Equals(pattern, state.LimitPattern, StringComparison.OrdinalIgnoreCase)
+            || !(rule == null && state.PendingLimit == null || rule?.SameAs(state.PendingLimit) == true);
+        if (ruleChanged)
+        {
+            // Restore first so failed restoration can be retried with the previous identity intact.
+            if (state.OriginalAffinity.HasValue) RestoreAffinity(process, state);
+            state.LimitPattern = pattern;
+            state.PendingLimit = rule?.Copy();
+            state.BusySince = null;
+            state.CooldownUntil = now;
+            state.AffinityOverridden = false;
+        }
+        bool allowed = rule is { IsValid: true } && (!rule.OnlyWhenBackground || !foreground);
         if (state.OriginalAffinity.HasValue)
         {
             if (process.Affinity != state.AppliedAffinity)
@@ -161,15 +179,17 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
                 state.AffinityOverridden = true;
                 log($"{process.Name} ({process.Identity.Pid}): affinity changed externally; CPU limiter released.");
             }
-            else if (now >= state.LimitUntil || !SameLimit(rule, state.ActiveLimit))
+            else if (now >= state.LimitUntil || !allowed)
             {
+                int cooldown = state.ActiveLimit?.CooldownSeconds ?? 0;
                 RestoreAffinity(process, state);
+                state.CooldownUntil = now + TimeSpan.FromSeconds(cooldown);
                 state.BusySince = null;
                 return; // Require a fresh sustained load interval before reapplying.
             }
             else return;
         }
-        if (rule == null || !rule.IsValid || process.CpuPercent == null || process.CpuPercent < rule.ThresholdPercent)
+        if (!allowed || now < state.CooldownUntil || process.CpuPercent == null || process.CpuPercent < rule!.ThresholdPercent)
         {
             state.BusySince = null;
             state.AffinityOverridden = false;
@@ -178,7 +198,7 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
         if (state.AffinityOverridden)
             return;
         state.BusySince ??= now;
-        if (now - state.BusySince.Value < TimeSpan.FromSeconds(rule.OverSeconds))
+        if (now - state.BusySince.Value < TimeSpan.FromSeconds(rule!.OverSeconds))
             return;
         ulong original = process.Affinity;
         ulong limited = LimitAffinity(original, rule.CoreCount);
@@ -187,15 +207,10 @@ internal sealed class ProcessAutomationEngine(Action<string> log)
         process.Affinity = limited;
         state.OriginalAffinity = original;
         state.AppliedAffinity = limited;
-        state.ActiveLimit = new CpuLimitRule { ThresholdPercent = rule.ThresholdPercent, OverSeconds = rule.OverSeconds,
-            CoreCount = rule.CoreCount, DurationSeconds = rule.DurationSeconds };
+        state.ActiveLimit = rule.Copy();
         state.LimitUntil = now + TimeSpan.FromSeconds(rule.DurationSeconds);
-        log($"{process.Name} ({process.Identity.Pid}): CPU limiter → {BitOperations.PopCount(limited)} cores for {rule.DurationSeconds}s.");
+        log($"{process.Name} ({process.Identity.Pid}): rule '{matchedRule!.ProcessName}' → CPU limiter, {BitOperations.PopCount(limited)} cores for {rule.DurationSeconds}s.");
     }
-
-    private static bool SameLimit(CpuLimitRule? left, CpuLimitRule? right) => left != null && right != null
-        && left.ThresholdPercent == right.ThresholdPercent && left.OverSeconds == right.OverSeconds
-        && left.CoreCount == right.CoreCount && left.DurationSeconds == right.DurationSeconds;
 
     internal static ulong LimitAffinity(ulong original, int cores)
     {

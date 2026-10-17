@@ -265,6 +265,114 @@ public class ProcessAutomationTests
     }
 
     [Fact]
+    public void DisablingRule_RestoresActiveLimitAndIgnoresFurtherLoad()
+    {
+        var process = new FakeProcess();
+        AddLimit();
+        Tick(0, process);
+        Tick(3, process);
+        Assert.Equal(3UL, process.Affinity);
+        _settings.Rules[0].Enabled = false;
+        Tick(4, process);
+        Tick(30, process);
+        Assert.Equal(15UL, process.Affinity);
+        _settings.Rules[0].Enabled = true;
+        Tick(31, process);
+        Tick(33, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(34, process);
+        Assert.Equal(3UL, process.Affinity);
+    }
+
+    [Fact]
+    public void EditedLimiter_RequiresFreshSustainedInterval()
+    {
+        var process = new FakeProcess();
+        AddLimit();
+        Tick(0, process);
+        Tick(2, process);
+        _settings.Rules[0].CpuLimit!.CoreCount = 1;
+        Tick(3, process);
+        Tick(5, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(6, process);
+        Assert.Equal(1UL, process.Affinity);
+    }
+
+    [Fact]
+    public void Cooldown_MustFinishBeforeNewSustainedIntervalBegins()
+    {
+        var process = new FakeProcess();
+        AddLimit();
+        _settings.Rules[0].CpuLimit!.CooldownSeconds = 5;
+        Tick(0, process);
+        Tick(3, process);
+        Tick(13, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(14, process);
+        Tick(17, process);
+        Tick(18, process);
+        Tick(20, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(21, process);
+        Assert.Equal(3UL, process.Affinity);
+    }
+
+    [Fact]
+    public void BackgroundOnlyLimiter_ReleasesOnFocusAndDoesNotCountForegroundLoad()
+    {
+        var process = new FakeProcess();
+        AddLimit();
+        _settings.Rules[0].CpuLimit!.OnlyWhenBackground = true;
+        Tick(0, process, process.Identity.Pid);
+        Tick(10, process, process.Identity.Pid);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(11, process);
+        Tick(14, process);
+        Assert.Equal(3UL, process.Affinity);
+        Tick(15, process, process.Identity.Pid);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(16, process);
+        Tick(18, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(19, process);
+        Assert.Equal(3UL, process.Affinity);
+    }
+
+    [Fact]
+    public void RuleOrderChanges_RestoreLimitBeforeStartingNewRule()
+    {
+        var process = new FakeProcess();
+        AddLimit();
+        var wildcard = new AutomationRule { ProcessName = "a*", CpuLimit = new()
+            { ThresholdPercent = 20, OverSeconds = 3, CoreCount = 1, DurationSeconds = 10 } };
+        _settings.Rules.Add(wildcard);
+        Tick(0, process);
+        Tick(3, process);
+        Assert.Equal(3UL, process.Affinity);
+        _settings.Rules.Reverse();
+        Tick(4, process);
+        Tick(6, process);
+        Assert.Equal(15UL, process.Affinity);
+        Tick(7, process);
+        Assert.Equal(1UL, process.Affinity);
+    }
+
+    [Fact]
+    public void WildcardExclusionCanBePaused()
+    {
+        var process = new FakeProcess();
+        _settings.ForegroundBoostEnabled = true;
+        var rule = new AutomationRule { ProcessName = "a*", ExcludeForegroundBoost = true };
+        _settings.Rules.Add(rule);
+        Tick(0, process, process.Identity.Pid);
+        Assert.Equal(ProcessPriorityClass.Normal, process.Priority);
+        rule.Enabled = false;
+        Tick(1, process, process.Identity.Pid);
+        Assert.Equal(ProcessPriorityClass.AboveNormal, process.Priority);
+    }
+
+    [Fact]
     public void UnavailableAffinity_DoesNotBlockSavedPriority()
     {
         var process = new FakeProcess { RejectAffinity = true };

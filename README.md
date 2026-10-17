@@ -69,13 +69,26 @@ Foreground boost and balancing start **disabled**. They operate on accessible ap
 ### 🎛️ Sustained-load CPU Limiter
 Right-click an application → **Automation rule…**, or open the **Process rules** tab to add, edit or remove a rule, including for applications that are not currently running.
 
-- Choose a CPU threshold, time above it, number of allowed cores to retain, and restriction duration.
+- Choose a CPU threshold, time above it, number of allowed cores to retain, restriction duration, and cooldown.
 - CPU percentages represent total machine capacity, not a single core.
-- The limiter uses a subset of each instance's existing affinity and restores that instance's original mask after the duration. It then requires a fresh sustained-load interval.
+- The limiter uses a subset of each instance's existing affinity and restores that instance's original mask after the duration. It waits for the configured cooldown, then requires a fresh sustained-load interval.
+- **Limit only while in the background** releases the restriction as soon as the application gains focus and ignores foreground CPU load. Existing rules keep their previous behavior until this option is enabled.
 - This limits available cores; it is not an exact CPU percentage cap. Short bursts are allowed. Affinity automation is unavailable on systems with multiple processor groups.
-- Rules match exact process names, case-insensitively, with or without `.exe`. They apply to all accessible matching instances in your session.
+- Rules match process names case-insensitively, with or without `.exe`, and support `*` (zero or more characters) and `?` (one character). For example, `game*` matches `game` and `GameClient.exe`; `worker?` matches `worker1` but not `worker12`. Paths and regular expressions are not supported.
 
 This approach follows the principle described in [Process Lasso's CPU Limiter documentation](https://bitsum.com/apps/process-lasso/docs/algorithms/cpu-limiter/). Exclusions for foreground boost and background balancing can be configured in the same rule editor; they do not disable an explicitly configured limiter.
+
+### Rule Management
+
+In **Automation & Rules… → Process rules**:
+
+- **Pause without deleting:** uncheck a rule's Enabled checkbox. Disabling or changing an active limiter restores its original affinity when the saved change is picked up. Re-enabling requires a fresh sustained-load interval.
+- **Control precedence:** the first enabled matching rule wins as a whole. Actions from different rules are not merged. Put specific exceptions above broad patterns using **Move up / Move down**. Reordering is disabled while filtering so hidden rules cannot obscure the order.
+- **Preview matches:** select a rule to see current matches and which earlier rule overrides it. **Refresh matches** updates the snapshot. The editor also previews the pattern while you type. Access/session exclusions still apply to listed processes.
+- **Import / Export:** export the current draft rules to a versioned JSON file. Import validates the entire file before adding any rules, skips duplicate patterns, and appends new ones after existing rules. Global boost/balance options and saved process settings are not included.
+- **Save explicitly:** rule edits, pauses, reordering and imports are staged until **Save**. Cancel discards them. Right-click **Automation rule…** saves on OK; a new exact rule is inserted first so it can override broader patterns.
+
+Existing exact-name rules load as enabled, with zero cooldown and the previous foreground limiter behavior. Duplicate patterns, invalid names, and out-of-range limiter values are rejected without discarding the editor's contents or partially importing a file.
 
 ### 📝 Continuous Rules & Activity
 **Enforce saved settings** applies saved priority, affinity, dynamic boost, efficiency and I/O settings to existing and newly launched applications, checking them every five seconds. Enforcement runs independently of searching, hovering over the list, or minimizing the window.

@@ -50,10 +50,12 @@ public partial class MainForm
             string name = processesListBox.SelectedItems[0].Text;
             var settings = AutomationSettings.Load();
             var rule = settings.FindRule(name);
-            using var editor = new ProcessRuleForm(rule ?? new AutomationRule { ProcessName = name });
+            using var editor = new ProcessRuleForm(rule ?? new AutomationRule { ProcessName = name }, candidate =>
+            {
+                try { settings.SetRule(candidate, rule, insertFirst: true); return null; }
+                catch (InvalidDataException ex) { return ex.Message; }
+            });
             if (editor.ShowDialog(this) != DialogResult.OK) return;
-            if (rule != null) settings.Rules.Remove(rule);
-            settings.Rules.Add(editor.Rule);
             settings.Save();
         }
         catch (Exception ex) { MessageBox.Show(this, ex.Message, "Unable to save automation rule", MessageBoxButtons.OK, MessageBoxIcon.Error); }

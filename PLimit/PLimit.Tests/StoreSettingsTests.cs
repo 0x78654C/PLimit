@@ -132,6 +132,71 @@ public class StoreSettingsTests : IDisposable
     });
 
     [Fact]
+    public void RulesTab_PauseReorderAndFilterPreserveExplicitSave() => WindowsTest.Run(() =>
+    {
+        new AutomationSettings { Rules = [new() { ProcessName = "cmd", ExcludeBalance = true },
+            new() { ProcessName = "c*", CpuLimit = new() { CooldownSeconds = 20, OnlyWhenBackground = true } },
+            new() { ProcessName = "*", Enabled = false, ExcludeForegroundBoost = true }] }.Save();
+        using var service = new ProcessAutomationService(_ => false);
+        using var form = new AutomationForm(service)
+        {
+            ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new System.Drawing.Point(-32000, -32000)
+        };
+        form.Show();
+        form.Controls.OfType<TabControl>().Single().SelectedIndex = 1;
+        Application.DoEvents();
+        var list = (ListView)form.Controls.Find("rulesList", true).Single();
+        list.Items[1].Selected = true;
+        list.Items[1].Focused = true;
+        var up = (Button)form.Controls.Find("moveRuleUp", true).Single();
+        Assert.True(up.Enabled);
+        up.PerformClick();
+        Assert.Equal("c*", ((AutomationRule)list.Items[0].Tag!).ProcessName);
+        list.Items[0].Checked = false;
+        Assert.False(((AutomationRule)list.Items[0].Tag!).Enabled);
+        Assert.Equal("cmd", AutomationSettings.Load().Rules[0].ProcessName);
+        Assert.True(AutomationSettings.Load().Rules[1].Enabled); // Changes remain staged until Save.
+        var search = (TextBox)form.Controls.Find("ruleSearch", true).Single();
+        search.Text = "cmd";
+        Assert.Single(list.Items.Cast<ListViewItem>());
+        list.Items[0].Selected = true;
+        Assert.False(up.Enabled);
+        search.Clear();
+        list.Items[1].Selected = true;
+        string? preview = Environment.GetEnvironmentVariable("PLIMIT_PREVIEW_DIR");
+        if (!string.IsNullOrEmpty(preview))
+        {
+            Directory.CreateDirectory(preview);
+            using var bitmap = new System.Drawing.Bitmap(form.Width, form.Height);
+            form.DrawToBitmap(bitmap, new System.Drawing.Rectangle(0, 0, form.Width, form.Height));
+            bitmap.Save(Path.Combine(preview, "rules.png"));
+        }
+        form.Close();
+        Assert.True(AutomationSettings.Load().Rules[1].Enabled);
+    });
+
+    [Fact]
+    public void RuleEditor_DuplicateValidationKeepsTypedPatternAndNewOptions() => WindowsTest.Run(() =>
+    {
+        using var editor = new ProcessRuleForm(new() { ProcessName = "game*", Enabled = false,
+            CpuLimit = new() { CooldownSeconds = 30, OnlyWhenBackground = true } }, _ => "A rule already exists.")
+        {
+            ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new System.Drawing.Point(-32000, -32000)
+        };
+        editor.Show();
+        Application.DoEvents();
+        var pattern = (TextBox)editor.Controls.Find("processPattern", true).Single();
+        pattern.Text = "worker?.exe";
+        ((Button)editor.Controls.Find("acceptRule", true).Single()).PerformClick();
+        Assert.NotEqual(DialogResult.OK, editor.DialogResult);
+        Assert.Equal("worker?.exe", pattern.Text);
+        Assert.Contains("already exists", editor.Controls.Find("ruleError", true).Single().Text);
+        Assert.False(((CheckBox)editor.Controls.Find("ruleEnabled", true).Single()).Checked);
+        Assert.True(((CheckBox)editor.Controls.Find("limitOnlyBackground", true).Single()).Checked);
+        editor.Close();
+    });
+
+    [Fact]
     public void MainWindow_LoadsAndClosesWithAutomationRunning() => WindowsTest.Run(() =>
     {
         bool originalPreference = Properties.Settings.Default.isLoadingSettings;
