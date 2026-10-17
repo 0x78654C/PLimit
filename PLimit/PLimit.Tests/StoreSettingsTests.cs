@@ -40,6 +40,140 @@ public class StoreSettingsTests : IDisposable
     private static StoreSettings Sut() => new();
 
     [Fact]
+    public void UpdateSetting_ConflictingLegacyBoostFieldsStaySynchronized()
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(_tempFile, """[{"ProcessName":"app","Boosted":"True","Wdptb":"False"}]""");
+        Sut().UpdateSetting(StoreSettings.SettingType.Boosted, "app", "Enabled");
+        Assert.Equal("Enabled", Sut().GetSetting("app", StoreSettings.SettingType.Wdptb));
+        Sut().UpdateSetting(StoreSettings.SettingType.Wdptb, "app", "Disabled");
+        Assert.Equal("Disabled", Sut().GetSetting("app", StoreSettings.SettingType.Boosted));
+    }
+
+    [Fact]
+    public void AutomationSettings_RoundTripAndRejectMalformedRules()
+    {
+        var settings = new AutomationSettings { BalanceEnabled = true, ForegroundBoostEnabled = true };
+        settings.Rules.Add(new() { ProcessName = "Game.exe", ExcludeBalance = true, CpuLimit = new() { CoreCount = 3 } });
+        settings.Save();
+        var loaded = AutomationSettings.Load();
+        Assert.True(loaded.BalanceEnabled);
+        Assert.Equal(3, loaded.FindRule("GAME")!.CpuLimit!.CoreCount);
+        settings.Rules[0].CpuLimit!.CoreCount = 0;
+        Assert.Throws<InvalidDataException>(() => settings.Save());
+        Assert.Equal(3, AutomationSettings.Load().Rules[0].CpuLimit!.CoreCount);
+        settings.Rules[0].CpuLimit = null;
+        settings.Rules.Add(new() { ProcessName = "game" });
+        Assert.Throws<InvalidDataException>(() => settings.Save());
+    }
+
+    [Fact]
+    public void BackgroundService_AppliesRulesToNewProcessAndSurvivesMalformedFile()
+    {
+        int targetPid = -1;
+        using var service = new ProcessAutomationService(process => process.Id == Volatile.Read(ref targetPid))
+            { EnforceSavedSettings = true };
+        Sut().UpdateSetting(StoreSettings.SettingType.Priority, "cmd", "BelowNormal");
+        service.Start();
+        WindowsTest.WithProcess(process =>
+        {
+            Volatile.Write(ref targetPid, process.Id);
+            Assert.True(SpinWait.SpinUntil(() =>
+            {
+                process.Refresh();
+                return process.PriorityClass == System.Diagnostics.ProcessPriorityClass.BelowNormal;
+            }, TimeSpan.FromSeconds(8)), string.Join("\n", service.GetLog()));
+            File.WriteAllText(AutomationSettings.FilePath, "broken json");
+            Assert.True(SpinWait.SpinUntil(() => service.GetLog().Any(line => line.Contains("last valid rules")), TimeSpan.FromSeconds(4)));
+            service.EnforceSavedSettings = false;
+            service.StopAsync().GetAwaiter().GetResult();
+        });
+    }
+
+    [Fact]
+    public void AutomationDialogs_RenderWithinTheirClientArea() => WindowsTest.Run(() =>
+    {
+        using var service = new ProcessAutomationService(_ => false);
+        using var automation = new AutomationForm(service);
+        using var rule = new ProcessRuleForm(new() { ProcessName = "ExampleApp", CpuLimit = new() });
+        string? preview = Environment.GetEnvironmentVariable("PLIMIT_PREVIEW_DIR");
+        foreach (var form in new Form[] { automation, rule })
+        {
+            form.ShowInTaskbar = false;
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new System.Drawing.Point(-32000, -32000);
+            form.Show();
+            Application.DoEvents();
+            form.PerformLayout();
+            using var bitmap = new System.Drawing.Bitmap(form.Width, form.Height);
+            form.DrawToBitmap(bitmap, new System.Drawing.Rectangle(0, 0, form.Width, form.Height));
+            if (!string.IsNullOrEmpty(preview))
+            {
+                Directory.CreateDirectory(preview);
+                bitmap.Save(Path.Combine(preview, form is AutomationForm ? "automation.png" : "process-rule.png"));
+            }
+            Assert.Contains(form.Controls.Cast<Control>(), control => control.Visible);
+            Assert.All(form.Controls.Cast<Control>().Where(control => control.Visible), control =>
+                Assert.True(control.Bounds.Bottom <= form.ClientSize.Height, $"{control.GetType().Name} exceeds the window."));
+            form.Close();
+        }
+    });
+
+    [Fact]
+    public void AutomationDialog_MalformedFileStillExposesActivity() => WindowsTest.Run(() =>
+    {
+        Directory.CreateDirectory(_tempDir);
+        File.WriteAllText(AutomationSettings.FilePath, "broken json");
+        using var service = new ProcessAutomationService(_ => false);
+        using var form = new AutomationForm(service);
+        Assert.Contains(form.Controls.OfType<Label>(), label => label.Text.Contains("Cannot read automation.json"));
+        Assert.Contains(form.Controls.OfType<TabControl>().Single().TabPages.Cast<TabPage>(), tab => tab.Text == "Activity");
+        Assert.Equal("broken json", File.ReadAllText(AutomationSettings.FilePath));
+    });
+
+    [Fact]
+    public void MainWindow_LoadsAndClosesWithAutomationRunning() => WindowsTest.Run(() =>
+    {
+        bool originalPreference = Properties.Settings.Default.isLoadingSettings;
+        try
+        {
+            Properties.Settings.Default.isLoadingSettings = false;
+            using var form = new MainForm
+            {
+                ShowInTaskbar = false, StartPosition = FormStartPosition.Manual,
+                Location = new System.Drawing.Point(-32000, -32000)
+            };
+            form.Show();
+            var timeout = System.Diagnostics.Stopwatch.StartNew();
+            var status = form.Controls.Find("automationBar", true).Single().Controls.OfType<Label>().Single();
+            while (!status.Text.Contains("Boost:") && timeout.Elapsed < TimeSpan.FromSeconds(8))
+            {
+                Application.DoEvents();
+                Thread.Sleep(10);
+            }
+            Assert.Contains("Boost:", status.Text);
+            Assert.NotEmpty(form.Controls.OfType<DoubleBufferedListView>().Single().Items);
+            string? preview = Environment.GetEnvironmentVariable("PLIMIT_PREVIEW_DIR");
+            if (!string.IsNullOrEmpty(preview))
+            {
+                Directory.CreateDirectory(preview);
+                using var bitmap = new System.Drawing.Bitmap(form.Width, form.Height);
+                form.DrawToBitmap(bitmap, new System.Drawing.Rectangle(0, 0, form.Width, form.Height));
+                bitmap.Save(Path.Combine(preview, "main-window.png"));
+            }
+            form.Close();
+            timeout.Restart();
+            while (!form.IsDisposed && timeout.Elapsed < TimeSpan.FromSeconds(3))
+            {
+                Application.DoEvents();
+                Thread.Sleep(10);
+            }
+            Assert.True(form.IsDisposed, "Window did not complete automation shutdown.");
+        }
+        finally { Properties.Settings.Default.isLoadingSettings = originalPreference; }
+    });
+
+    [Fact]
     public void ReadSettingsPriority_AppliesSavedIdlePriority() => WindowsTest.Run(() => WindowsTest.WithProcess(process =>
     {
         Sut().UpdateSetting(StoreSettings.SettingType.Priority, process.ProcessName, "Idle");

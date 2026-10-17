@@ -162,9 +162,10 @@ namespace PLimit.Utils
             }
         }
 
-        private static bool EnablePrivilege(string privilegeName)
+        internal static bool EnablePrivilege(string privilegeName)
         {
-            if (!OpenProcessToken(Process.GetCurrentProcess().Handle,
+            using var currentProcess = Process.GetCurrentProcess();
+            if (!OpenProcessToken(currentProcess.Handle,
                 (uint)(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), out IntPtr hToken))
                 return false;
 
@@ -195,18 +196,10 @@ namespace PLimit.Utils
         /// <param name="priority"></param>
         public bool SetIoPriorityAllThreads(int processId, IO_PRIORITY_HINT priority)
         {
-            try
-            {
-                using var getProcess = Process.GetProcessById(processId);
-                bool updatedAnyThread = false;
-                foreach (ProcessThread thread in getProcess.Threads)
-                    updatedAnyThread |= SetIoPriority(thread, priority);
-                return updatedAnyThread;
-            }
-            catch
-            {
-                return false;
-            }
+            if (!Enum.IsDefined(priority)) return false;
+            if (priority >= IO_PRIORITY_HINT.High) EnablePrivilege("SeIncreaseBasePriorityPrivilege");
+            // Process-level I/O priority is inherited by newly created threads as well.
+            return WindowsAutomationProcess.SetIoPriority(processId, priority);
         }
 
         /// <summary>
@@ -515,34 +508,9 @@ namespace PLimit.Utils
         /// <param name="processId"></param>
         public bool SetThreadBoost(bool enable, int processId)
         {
-            try
-            {
-                using var process = Process.GetProcessById(processId);
-                bool updatedAnyThread = false;
-                foreach (ProcessThread thread in process.Threads)
-                {
-                    IntPtr hThread = OpenThread(THREAD_SET_INFORMATION, false, thread.Id);
-                    if (hThread == IntPtr.Zero) continue;
-                    try
-                    {
-                        updatedAnyThread |= SetThreadPriorityBoost(hThread, !enable);
-                    }
-                    finally
-                    {
-                        CloseHandle(hThread);
-                    }
-                }
-
-                if (updatedAnyThread)
-                    return true;
-            }
-            catch
-            {
-                // The shared error below covers access denied and processes that exited.
-            }
-
-            MessageBox.Show("Failed to set thread priority boost! Try running the application as administrator.", "Process Limitator", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            // SetProcessPriorityBoost applies to all threads, including threads created later.
+            // Avoid reporting a partial thread enumeration as a successful process-wide change.
+            return SetBoost(enable, processId);
         }
 
         /// <summary>

@@ -74,6 +74,11 @@ namespace PLimit.Utils
                     tb.ForeColor = TextPrimary;
                     break;
 
+                case NumericUpDown number:
+                    number.BackColor = ControlBg;
+                    number.ForeColor = TextPrimary;
+                    break;
+
                 case Label lbl:
                     lbl.ForeColor = TextPrimary;
                     lbl.BackColor = Color.Transparent;

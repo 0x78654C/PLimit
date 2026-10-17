@@ -7,6 +7,16 @@ namespace PLimit.Tests;
 public class EfficiencyModeTests
 {
     [Fact]
+    public void DisableEfficiency_DoesNotResetAnExplicitElevatedPriority() => WindowsTest.WithProcess(process =>
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621)) return;
+        process.PriorityClass = System.Diagnostics.ProcessPriorityClass.AboveNormal;
+        new EfficiencyModeHelper().DisableEfficiencyMode(process.Id);
+        process.Refresh();
+        Assert.Equal(System.Diagnostics.ProcessPriorityClass.AboveNormal, process.PriorityClass);
+    });
+
+    [Fact]
     public void EfficiencyMode_CanReadEnabledAndDisabledState() => WindowsTest.WithProcess(process =>
     {
         // Querying power throttling requires Windows 11 22H2 or later.

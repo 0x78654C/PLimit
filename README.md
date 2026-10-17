@@ -57,18 +57,30 @@ Control disk access priority for a process:
 Restrict a process to specific CPU cores via the right-click context menu. At least one core must remain enabled.
 
 ### 🚀 Process Priority Boost
-Enable or disable Windows dynamic scheduling-priority boosts for a selected process.
+Use **Automation & Rules… → Responsiveness** to enable foreground boosting. PLimit temporarily raises a Normal-priority foreground application to Above Normal, then restores its priority when focus changes or boosting is disabled. Explicit saved priorities, efficiency rules, excluded applications, and non-Normal priorities take precedence.
 
-### 🧵 Thread Priority Boost
-Read and control the **dynamic thread priority boost** for a selected process.
+The right-click **Windows Dynamic Priority Boost** menu controls a separate Windows feature: brief scheduling boosts after waits. It applies to the entire process, including future threads. The former duplicate process/thread boost actions are consolidated; legacy settings remain supported.
 
-When enabled (Windows default), the kernel temporarily raises a thread's base priority after it wakes from a wait (e.g. after I/O or a UI event) to improve responsiveness. Disabling it keeps all threads pinned to their base priority — useful for latency-sensitive workloads or real-time scenarios where predictable scheduling matters more than burst responsiveness.
+### ⚖️ Background CPU Balancing
+Enable balancing in **Automation & Rules…** to temporarily lower busy Normal-priority background applications to Below Normal during sustained CPU pressure. Defaults are 80% system CPU, 15% per-process CPU, and 3 seconds of sustained load. A separate recovery threshold and quiet period prevent rapid priority switching. Foreground applications are released immediately.
 
-| Action | Description |
-|---|---|
-| **Read** | Returns `true` if boost is active, `false` if disabled, or `null` if the status cannot be queried (access denied) |
-| **Enable** | Restores the default Windows behaviour — threads receive a temporary priority boost after waiting |
-| **Disable** | Prevents any dynamic boost — threads always run at their assigned base priority |
+Foreground boost and balancing start **disabled**. They operate on accessible applications in your session and exclude PLimit, critical Windows processes and selected system components. This is PLimit's own balancing policy, inspired by the behavior described in [Process Lasso's ProBalance documentation](https://bitsum.com/apps/process-lasso/docs/algorithms/probalance/), not an implementation of its proprietary algorithm.
+
+### 🎛️ Sustained-load CPU Limiter
+Right-click an application → **Automation rule…**, or open the **Process rules** tab to add, edit or remove a rule, including for applications that are not currently running.
+
+- Choose a CPU threshold, time above it, number of allowed cores to retain, and restriction duration.
+- CPU percentages represent total machine capacity, not a single core.
+- The limiter uses a subset of each instance's existing affinity and restores that instance's original mask after the duration. It then requires a fresh sustained-load interval.
+- This limits available cores; it is not an exact CPU percentage cap. Short bursts are allowed. Affinity automation is unavailable on systems with multiple processor groups.
+- Rules match exact process names, case-insensitively, with or without `.exe`. They apply to all accessible matching instances in your session.
+
+This approach follows the principle described in [Process Lasso's CPU Limiter documentation](https://bitsum.com/apps/process-lasso/docs/algorithms/cpu-limiter/). Exclusions for foreground boost and background balancing can be configured in the same rule editor; they do not disable an explicitly configured limiter.
+
+### 📝 Continuous Rules & Activity
+**Enforce saved settings** applies saved priority, affinity, dynamic boost, efficiency and I/O settings to existing and newly launched applications, checking them every five seconds. Enforcement runs independently of searching, hovering over the list, or minimizing the window.
+
+The **Activity** tab shows the latest 250 actions and failures for this session. Temporary priority and affinity changes are restored on normal exit; external changes are preserved. Process identity includes creation time, and native handles remain tied to the original instance. Forced termination or a system crash cannot run this restoration.
 
 ### 🌿 Efficiency Mode
 Toggle Windows **EcoQoS** (Efficiency Mode) on or off for a process. Efficiency Mode reduces CPU and power usage — ideal for background apps.
@@ -85,9 +97,10 @@ A live bar graph at the bottom of the window shows:
 | Option | Description |
 |---|---|
 | **Save Settings** | Persists your priority/affinity/boost/efficiency/I/O choices to `Settings/processes.json` |
-| **Load Settings on Startup** | Automatically re-applies saved settings when PLimit launches |
+| **Enforce saved settings** | Applies saved settings at startup, to new instances, and while PLimit remains open (reuses the previous startup preference) |
+| **Automation & Rules…** | Saves global boost/balance options and per-process exclusions/limiter rules to `Settings/automation.json` |
 
-Settings are stored in `Settings/processes.json` next to the executable.
+Settings are stored next to the executable. Automation rules are saved explicitly through their dialogs, independently of **Save settings**. Invalid files are reported in Activity; the background engine retains the last valid configuration until the files are corrected. Disabling enforcement always stops saved-setting enforcement. The automation engine is part of the application, not a Windows service, so PLimit must remain open.
 
 ---
 

@@ -39,6 +39,7 @@ namespace PLimit
         public MainForm()
         {
             InitializeComponent();
+            InitializeAutomation();
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace PLimit
 
             await RefreshProcessListAsync(showBusyState: true);
             if (!_isClosing)
-                LoadSettings();
+                StartAutomation();
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
@@ -380,8 +381,22 @@ namespace PLimit
             RestoreListViewPosition();
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        protected override async void OnFormClosing(FormClosingEventArgs e)
         {
+            if (!_closeAfterAutomation && _automation != null)
+            {
+                e.Cancel = true;
+                if (_isClosing) return;
+                _isClosing = true;
+                reloadProcess.Stop();
+                _automationStatusTimer?.Stop();
+                _refreshCancellation.Cancel();
+                _automationStatus.Text = "Restoring temporary process settings…";
+                await _automation.StopAsync();
+                _closeAfterAutomation = true;
+                Close();
+                return;
+            }
             _isClosing = true;
             reloadProcess.Stop();
             _refreshCancellation.Cancel();
@@ -679,6 +694,7 @@ namespace PLimit
         /// <param name="e">An EventArgs object that contains the event data.</param>
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
+            if (_automation != null) _automation.EnforceSavedSettings = checkBox1.Checked;
             Properties.Settings.Default.isLoadingSettings = checkBox1.Checked;
             Properties.Settings.Default.Save();
         }

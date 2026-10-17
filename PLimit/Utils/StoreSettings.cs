@@ -56,6 +56,7 @@
                 {
                     case SettingType.Boosted:
                         processData.Boosted = NormalizeEnabledState(value, settingType);
+                        if (processData.Wdptb != null) processData.Wdptb = processData.Boosted;
                         break;
 
                     case SettingType.IOPriority:
@@ -76,6 +77,7 @@
 
                     case SettingType.Wdptb:
                         processData.Wdptb = NormalizeEnabledState(value, settingType);
+                        if (processData.Boosted != null) processData.Boosted = processData.Wdptb;
                         break;
 
                     default:
